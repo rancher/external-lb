@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	metadataUrl = "http://localhost:90/latest"
+	metadataUrl = "http://rancher-metadata/latest"
 )
 
 type MetadataClient struct {

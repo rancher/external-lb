@@ -8,7 +8,7 @@ import (
 
 var (
 	router         = mux.NewRouter()
-	healtcheckPort = ":4000"
+	healtcheckPort = ":1000"
 )
 
 func startHealthcheck() {

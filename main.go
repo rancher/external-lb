@@ -60,20 +60,6 @@ func setEnv() {
 	}
 	m = mClient
 
-	cattleUrl := os.Getenv("CATTLE_URL")
-	if len(cattleUrl) == 0 {
-		logrus.Fatalf("CATTLE_URL is not set")
-	}
-
-	cattleApiKey := os.Getenv("CATTLE_ACCESS_KEY")
-	if len(cattleApiKey) == 0 {
-		logrus.Fatalf("CATTLE_ACCESS_KEY is not set")
-	}
-
-	cattleSecretKey := os.Getenv("CATTLE_SECRET_KEY")
-	if len(cattleSecretKey) == 0 {
-		logrus.Fatalf("CATTLE_SECRET_KEY is not set")
-	}
 }
 
 func main() {
