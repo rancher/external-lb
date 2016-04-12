@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/rancher/external-lb",
+	"GoVersion": "go1.6",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.7",
+			"Rev": "418b41d23a1bf978c06faea5313ba194650ac088"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "ad4d7a5882b961e07e2626045eb995c022ac6664"
+		},
+		{
+			"ImportPath": "github.com/rancher/go-rancher-metadata/metadata",
+			"Rev": "3336d4004ef4ad0809bf7131124a74b90f5bfa40"
+		},
+		{
+			"ImportPath": "github.com/scottdware/go-bigip",
+			"Rev": "47f9a288d982285078ad80951d23a2c3177820e3"
+		}
+	]
+}
