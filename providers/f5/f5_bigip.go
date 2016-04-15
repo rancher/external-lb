@@ -42,6 +42,14 @@ func init() {
 
 	client = bigip.NewSession(f5_host, f5_admin, f5_pwd)
 
+	logrus.Debugf("f5 TestConnection check")
+	vs, err := client.VirtualServers()
+	if err != nil {
+		logrus.Fatalf("f5 TestConnection: Error listing f5 virtual servers: %v\n", err)
+	} else {
+		logrus.Debugf("f5 TestConnection check passed %v", vs)
+	}
+
 	f5BigIPHandler := &F5BigIPHandler{}
 	if err := providers.RegisterProvider(name, f5BigIPHandler); err != nil {
 		logrus.Fatalf("Could not register %s provider", name)
