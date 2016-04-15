@@ -24,30 +24,22 @@ func init() {
 		logrus.Fatalf("F5_BIGIP_HOST is not set, skipping init of %s provider", name)
 		return
 	}
-	logrus.Debugf("%s", f5_host)
-
 	f5_admin := os.Getenv("F5_BIGIP_USER")
 	if len(f5_admin) == 0 {
 		logrus.Fatalf("F5_BIGIP_USER is not set, skipping init of %s provider", name)
 		return
 	}
-	logrus.Debugf("%s", f5_admin)
-
 	f5_pwd := os.Getenv("F5_BIGIP_PWD")
 	if len(f5_pwd) == 0 {
 		logrus.Fatalf("F5_BIGIP_PWD is not set, skipping init of %s provider", name)
 		return
 	}
-	logrus.Debugf("%s", f5_pwd)
 
 	client = bigip.NewSession(f5_host, f5_admin, f5_pwd)
-
-	logrus.Debugf("f5 TestConnection check")
-	vs, err := client.VirtualServers()
-	if err != nil {
-		logrus.Fatalf("f5 TestConnection: Error listing f5 virtual servers: %v\n", err)
-	} else {
-		logrus.Debugf("f5 TestConnection check passed %v", vs)
+	works, err := checkF5Connection()
+	if !works {
+		logrus.Fatalf("Connecting to f5 host %v does not work, error: %v", f5_host, err)
+		return
 	}
 
 	f5BigIPHandler := &F5BigIPHandler{}
@@ -265,17 +257,14 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 	// pool members -> LB Targets hostIP : Port
 	var lbConfigs []model.LBConfig
 
-	logrus.Debugf("f5 GetLBConfigs: listing f5 virtual servers")
-
 	vServers, err := client.VirtualServers()
 	if err != nil {
 		logrus.Errorf("f5 GetLBConfigs: Error listing f5 virtual servers: %v\n", err)
 		return lbConfigs, err
 	}
-	logrus.Debugf("f5 GetLBConfigs: virtual servers %v", vServers.VirtualServers)
+
 	for _, vServer := range vServers.VirtualServers {
 		if vServer.Pool != "" {
-			logrus.Debugf("f5 GetLBConfigs: vServer.Pool %v", vServer.Pool)
 			pool, err := client.GetPool(strings.TrimPrefix(vServer.Pool, "/Common/"))
 			if err != nil {
 				logrus.Errorf("f5 GetLBConfigs: Error getting the pool: %s, err: %v\n", vServer.Pool, err)
@@ -314,11 +303,19 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 }
 
 func (*F5BigIPHandler) TestConnection() (bool, error) {
-	logrus.Debugf("f5 TestConnection check")
-	_, err := client.VirtualServers()
+	return checkF5Connection()
+}
+
+
+func checkF5Connection() (bool, error) {
+	var works bool
+	_, err := client.Pools()
 	if err != nil {
-		logrus.Errorf("f5 TestConnection: Error listing f5 virtual servers: %v\n", err)
-		return false, err
+		logrus.Errorf("f5 TestConnection: Error listing f5 pool: %v\n", err)
+		works = false
+	} else {
+		logrus.Infof("f5 TestConnection check passed")
+		works = true
 	}
-	return true, nil
+	return works, err
 }

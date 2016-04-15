@@ -24,13 +24,11 @@ func UpdateProviderLBConfigs(metadataConfigs map[string]model.LBConfig) error {
 }
 
 func getProviderLBConfigs() (map[string]model.LBConfig, error) {
-	logrus.Debugf("Getting Rancher LB configs from provider: %v", provider.GetName())
 	allConfigs, err := provider.GetLBConfigs()
 	if err != nil {
 		logrus.Debugf("Error Getting Rancher LB configs from provider: %v", err)
 		return nil, err
 	}
-	logrus.Debugf("allConfigs: %v", allConfigs)
 	rancherConfigs := make(map[string]model.LBConfig, len(allConfigs))
 	suffix := "_rancher.internal"
 	for _, value := range allConfigs {
