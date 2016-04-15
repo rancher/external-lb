@@ -264,10 +264,10 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 		logrus.Errorf("f5 GetLBConfigs: Error listing f5 virtual servers: %v\n", err)
 		return lbConfigs, err
 	}
-
+	logrus.Debugf("f5 GetLBConfigs: virtual servers %v", vServers.VirtualServers)
 	for _, vServer := range vServers.VirtualServers {
 		if vServer.Pool != "" {
-
+			logrus.Debugf("f5 GetLBConfigs: vServer.Pool %v", vServer.Pool)
 			pool, err := client.GetPool(strings.TrimPrefix(vServer.Pool, "/Common/"))
 			if err != nil {
 				logrus.Errorf("f5 GetLBConfigs: Error getting the pool: %s, err: %v\n", vServer.Pool, err)
@@ -306,6 +306,7 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 }
 
 func (*F5BigIPHandler) TestConnection() (bool, error) {
+	logrus.Debugf("f5 TestConnection check")
 	_, err := client.VirtualServers()
 	if err != nil {
 		logrus.Errorf("f5 TestConnection: Error listing f5 virtual servers: %v\n", err)
