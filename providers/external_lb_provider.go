@@ -8,18 +8,16 @@ import (
 
 type Provider interface {
 	GetName() string
-	ConfigureLBRecord(model.LBRecord) error
+	AddLBConfig(config model.LBConfig) error
+	RemoveLBConfig(config model.LBConfig) error
+	UpdateLBConfig(config model.LBConfig) error
+	GetLBConfigs() ([]model.LBConfig, error)
+	TestConnection() (bool, error)
 }
 
 var (
 	providers map[string]Provider
 )
-
-func init() {
-	// try to resolve rancher-metadata before going further
-	// the resolution indicates that the network has been set
-
-}
 
 func GetProvider(name string) Provider {
 	if provider, ok := providers[name]; ok {

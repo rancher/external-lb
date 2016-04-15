@@ -91,18 +91,18 @@ func main() {
 
 		if update {
 			// get records from metadata
-			metadataRecs, err := m.GetMetadataLBRecords()
+			logrus.Debugf("Reading metadata LB Configs")
+			metadataLBConfigs, err := m.GetMetadataLBConfigs()
 			if err != nil {
-				logrus.Errorf("Error reading external dns entries: %v", err)
+				logrus.Errorf("Error reading metadata lb entries: %v", err)
 			}
-			logrus.Debugf("LB records from metadata: %v", metadataRecs)
+			logrus.Debugf("LB configs from metadata: %v", metadataLBConfigs)
 
 			/*update provider*/
-			for _, lbRec := range metadataRecs {
-				err := provider.ConfigureLBRecord(lbRec)
-				if err != nil {
-					logrus.Errorf("Failed to update provider with new LB record: %v", err)
-				}
+			logrus.Debugf("Reading Provider LB Configs")
+			err = UpdateProviderLBConfigs(metadataLBConfigs)
+			if err != nil {
+				logrus.Errorf("Error reading provider lb entries: %v", err)
 			}
 			lastUpdated = time.Now()
 		}

@@ -1,16 +1,12 @@
 package model
 
-import (
-)
-
-
-type LBRecord struct {
-	Vip		 string	
-	ServiceName string
-	Nodes	[]LBNode
+type LBConfig struct {
+	LBEndpoint   string
+	LBTargetName string
+	LBTargets    []LBTarget
 }
 
-type LBNode struct {
-	HostIP	 string
-	Port	 string
+type LBTarget struct {
+	HostIP string
+	Port   string
 }
