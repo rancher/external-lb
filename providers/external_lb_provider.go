@@ -2,7 +2,6 @@ package providers
 
 import (
 	"fmt"
-	//"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/model"
 )
 
@@ -12,7 +11,7 @@ type Provider interface {
 	RemoveLBConfig(config model.LBConfig) error
 	UpdateLBConfig(config model.LBConfig) error
 	GetLBConfigs() ([]model.LBConfig, error)
-	TestConnection() (bool, error)
+	TestConnection() error
 }
 
 var (
@@ -31,7 +30,7 @@ func RegisterProvider(name string, provider Provider) error {
 		providers = make(map[string]Provider)
 	}
 	if _, exists := providers[name]; exists {
-		return fmt.Errorf("provider already registered")
+		return fmt.Errorf("provider %s already registered", name)
 	}
 	providers[name] = provider
 	return nil

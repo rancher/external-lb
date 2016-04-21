@@ -10,12 +10,11 @@ import (
 )
 
 const (
-	metadataUrl = "http://rancher-metadata/latest"
+	metadataUrl = "http://rancher-metadata/2015-12-19"
 )
 
 type MetadataClient struct {
-	MetadataClient  *metadata.Client
-	EnvironmentName string
+	MetadataClient *metadata.Client
 }
 
 func getEnvironmentName(m *metadata.Client) (string, error) {
@@ -40,14 +39,13 @@ func NewMetadataClient() (*MetadataClient, error) {
 		logrus.Fatalf("Failed to configure rancher-metadata: %v", err)
 	}
 
-	envName, err := getEnvironmentName(m)
+	_, err = getEnvironmentName(m)
 	if err != nil {
-		logrus.Fatalf("Error reading stack info: %v", err)
+		logrus.Fatalf("Error reading stack metadata info: %v", err)
 	}
 
 	return &MetadataClient{
-		MetadataClient:  m,
-		EnvironmentName: envName,
+		MetadataClient: m,
 	}, nil
 }
 
@@ -55,7 +53,7 @@ func (m *MetadataClient) GetVersion() (string, error) {
 	return m.MetadataClient.GetVersion()
 }
 
-func (m *MetadataClient) GetMetadataLBConfigs() (map[string]model.LBConfig, error) {
+func (m *MetadataClient) GetMetadataLBConfigs(lbEndpointServiceLabel string, targetRancherSuffix string) (map[string]model.LBConfig, error) {
 	lbConfigs := make(map[string]model.LBConfig)
 
 	services, err := m.MetadataClient.GetServices()
@@ -64,15 +62,21 @@ func (m *MetadataClient) GetMetadataLBConfigs() (map[string]model.LBConfig, erro
 		logrus.Infof("Error reading services %v", err)
 	} else {
 		for _, service := range services {
-			lb_endpoint, ok := service.Labels["io.rancher.service.external_lb_endpoint"]
+			lb_endpoint, ok := service.Labels[lbEndpointServiceLabel]
 			if ok {
 				//label exists, configure external LB
-				logrus.Debugf("label exists for service : %v", service)
+				// Configure this service only if this endpoint is already not used by some other service so far
+				_, ok = lbConfigs[lb_endpoint]
+				if ok {
+					logrus.Errorf("LB Endpoint already used by another service, will skip this service : %v", service.Name)
+					continue
+				}
+
+				logrus.Debugf("LB label exists for service : %v", service)
 				lbConfig := model.LBConfig{}
 				lbConfig.LBEndpoint = lb_endpoint
-				lbConfig.LBTargetName = service.StackName + "." + service.Name + "_rancher.internal"
-				err = m.getContainerLBTargets(&lbConfig, service)
-				if err != nil {
+				lbConfig.LBTargetPoolName = service.UUID + targetRancherSuffix
+				if err = m.getContainerLBTargets(&lbConfig, service); err != nil {
 					continue
 				}
 				lbConfigs[lb_endpoint] = lbConfig

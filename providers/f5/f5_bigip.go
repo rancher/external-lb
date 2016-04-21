@@ -1,7 +1,6 @@
 package f5
 
 import (
-	//"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/model"
 	"github.com/rancher/external-lb/providers"
@@ -36,8 +35,8 @@ func init() {
 	}
 
 	client = bigip.NewSession(f5_host, f5_admin, f5_pwd)
-	works, err := checkF5Connection()
-	if !works {
+	err := checkF5Connection()
+	if err != nil {
 		logrus.Fatalf("Connecting to f5 host %v does not work, error: %v", f5_host, err)
 		return
 	}
@@ -83,7 +82,7 @@ func (*F5BigIPHandler) AddLBConfig(config model.LBConfig) error {
 		}
 
 		//Create our pool if does not exist
-		poolName := config.LBTargetName
+		poolName := config.LBTargetPoolName
 		if !poolExists(poolName) {
 			err = client.CreatePool(poolName)
 			if err != nil {
@@ -196,7 +195,7 @@ func (*F5BigIPHandler) RemoveLBConfig(config model.LBConfig) error {
 		return err
 	}
 
-	poolName := config.LBTargetName
+	poolName := config.LBTargetPoolName
 
 	poolMembers, err := client.PoolMembers(poolName)
 	var nodes []model.LBTarget
@@ -253,7 +252,7 @@ func (f *F5BigIPHandler) UpdateLBConfig(config model.LBConfig) error {
 func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 	//list all virtualServers
 	// for each vs -> LBEndpoint
-	// get the pool -> LBTargetName
+	// get the pool -> LBTargetPoolName
 	// pool members -> LB Targets hostIP : Port
 	var lbConfigs []model.LBConfig
 
@@ -272,7 +271,7 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 			}
 			lbConfig := model.LBConfig{}
 			lbConfig.LBEndpoint = vServer.Name
-			lbConfig.LBTargetName = pool.Name
+			lbConfig.LBTargetPoolName = pool.Name
 
 			var nodes []model.LBTarget
 
@@ -302,20 +301,17 @@ func (*F5BigIPHandler) GetLBConfigs() ([]model.LBConfig, error) {
 
 }
 
-func (*F5BigIPHandler) TestConnection() (bool, error) {
+func (*F5BigIPHandler) TestConnection() error {
 	return checkF5Connection()
 }
 
 
-func checkF5Connection() (bool, error) {
-	var works bool
+func checkF5Connection() error {
 	_, err := client.Pools()
 	if err != nil {
 		logrus.Errorf("f5 TestConnection: Error listing f5 pool: %v\n", err)
-		works = false
 	} else {
 		logrus.Infof("f5 TestConnection check passed")
-		works = true
 	}
-	return works, err
+	return err
 }

@@ -30,9 +30,8 @@ func getProviderLBConfigs() (map[string]model.LBConfig, error) {
 		return nil, err
 	}
 	rancherConfigs := make(map[string]model.LBConfig, len(allConfigs))
-	suffix := "_rancher.internal"
 	for _, value := range allConfigs {
-		if strings.HasSuffix(value.LBTargetName, suffix) {
+		if strings.HasSuffix(value.LBTargetPoolName, targetRancherSuffix) {
 			rancherConfigs[value.LBEndpoint] = value
 		}
 	}
@@ -77,8 +76,9 @@ func updateExistingConfigs(metadataConfigs map[string]model.LBConfig, providerCo
 			mLBConfig := metadataConfigs[key]
 			pLBConfig := providerConfigs[key]
 			var update bool
-			//check that the targetName and targets match
-			if mLBConfig.LBTargetName == pLBConfig.LBTargetName {
+
+			//check that the targetPoolName and targets match
+			if strings.EqualFold(mLBConfig.LBTargetPoolName, pLBConfig.LBTargetPoolName) {
 				if len(mLBConfig.LBTargets) != len(pLBConfig.LBTargets) {
 					update = true
 				}
@@ -97,6 +97,10 @@ func updateExistingConfigs(metadataConfigs map[string]model.LBConfig, providerCo
 						break
 					}
 				}
+			} else {
+				//targetPool should be changed
+				logrus.Debugf("The LBEndPoint %s  will be updated to map to a new LBTargetPoolName %s", key, mLBConfig.LBTargetPoolName)
+				update = true
 			}
 
 			if update {
