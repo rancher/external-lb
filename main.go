@@ -31,8 +31,10 @@ var (
 	debug        = flag.Bool("debug", false, "Debug")
 	logFile      = flag.String("log", "", "Log file")
 
-	provider providers.Provider
-	m        *metadata.MetadataClient
+	provider               providers.Provider
+	m                      *metadata.MetadataClient
+	lbEndpointServiceLabel string
+	targetRancherSuffix    string
 )
 
 func setEnv() {
@@ -60,6 +62,13 @@ func setEnv() {
 	}
 	m = mClient
 
+	targetRancherSuffix = os.Getenv("LB_TARGET_RANCHER_SUFFIX")
+	if len(targetRancherSuffix) == 0 {
+		logrus.Info("LB_TARGET_RANCHER_SUFFIX is not set, using default suffix '_rancher.internal'")
+		targetRancherSuffix = "_rancher.internal"
+	}
+
+	lbEndpointServiceLabel = "io.rancher.service.external_lb_endpoint"
 }
 
 func main() {
@@ -92,7 +101,7 @@ func main() {
 		if update {
 			// get records from metadata
 			logrus.Debugf("Reading metadata LB Configs")
-			metadataLBConfigs, err := m.GetMetadataLBConfigs()
+			metadataLBConfigs, err := m.GetMetadataLBConfigs(lbEndpointServiceLabel, targetRancherSuffix)
 			if err != nil {
 				logrus.Errorf("Error reading metadata lb entries: %v", err)
 			}

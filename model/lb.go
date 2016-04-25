@@ -2,7 +2,7 @@ package model
 
 type LBConfig struct {
 	LBEndpoint   string
-	LBTargetName string
+	LBTargetPoolName string
 	LBTargets    []LBTarget
 }
 
