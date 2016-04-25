@@ -91,7 +91,7 @@ func main() {
 			version = newVersion
 			update = true
 		} else {
-			logrus.Debugf("No changes in metadata version: %s", newVersion)
+			//logrus.Debugf("No changes in metadata version: %s", newVersion)
 			if time.Since(lastUpdated).Minutes() >= forceUpdateInterval {
 				logrus.Debugf("Executing force update as metadata version hasn't been changed in: %v minutes", forceUpdateInterval)
 				update = true
@@ -100,7 +100,7 @@ func main() {
 
 		if update {
 			// get records from metadata
-			logrus.Debugf("Reading metadata LB Configs")
+
 			metadataLBConfigs, err := m.GetMetadataLBConfigs(lbEndpointServiceLabel, targetRancherSuffix)
 			if err != nil {
 				logrus.Errorf("Error reading metadata lb entries: %v", err)
@@ -108,7 +108,7 @@ func main() {
 			logrus.Debugf("LB configs from metadata: %v", metadataLBConfigs)
 
 			/*update provider*/
-			logrus.Debugf("Reading Provider LB Configs")
+
 			err = UpdateProviderLBConfigs(metadataLBConfigs)
 			if err != nil {
 				logrus.Errorf("Error reading provider lb entries: %v", err)

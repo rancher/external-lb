@@ -305,13 +305,10 @@ func (*F5BigIPHandler) TestConnection() error {
 	return checkF5Connection()
 }
 
-
 func checkF5Connection() error {
 	_, err := client.Pools()
 	if err != nil {
 		logrus.Errorf("f5 TestConnection: Error listing f5 pool: %v\n", err)
-	} else {
-		logrus.Infof("f5 TestConnection check passed")
 	}
 	return err
 }
