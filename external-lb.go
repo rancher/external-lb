@@ -30,8 +30,9 @@ func getProviderLBConfigs() (map[string]model.LBConfig, error) {
 		return nil, err
 	}
 	rancherConfigs := make(map[string]model.LBConfig, len(allConfigs))
+	suffix := "_" + m.EnvironmentUUID + "_" + targetRancherSuffix
 	for _, value := range allConfigs {
-		if strings.HasSuffix(value.LBTargetPoolName, targetRancherSuffix) {
+		if strings.HasSuffix(value.LBTargetPoolName, suffix) {
 			rancherConfigs[value.LBEndpoint] = value
 		}
 	}

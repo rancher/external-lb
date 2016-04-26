@@ -14,10 +14,11 @@ const (
 )
 
 type MetadataClient struct {
-	MetadataClient *metadata.Client
+	MetadataClient  *metadata.Client
+	EnvironmentUUID string
 }
 
-func getEnvironmentName(m *metadata.Client) (string, error) {
+func getEnvironmentUUID(m *metadata.Client) (string, error) {
 	timeout := 30 * time.Second
 	var err error
 	var stack metadata.Stack
@@ -27,7 +28,7 @@ func getEnvironmentName(m *metadata.Client) (string, error) {
 			logrus.Errorf("Error reading stack info: %v...will retry", err)
 			time.Sleep(i)
 		} else {
-			return stack.EnvironmentName, nil
+			return stack.EnvironmentUUID, nil
 		}
 	}
 	return "", fmt.Errorf("Error reading stack info: %v", err)
@@ -39,13 +40,14 @@ func NewMetadataClient() (*MetadataClient, error) {
 		logrus.Fatalf("Failed to configure rancher-metadata: %v", err)
 	}
 
-	_, err = getEnvironmentName(m)
+	envUUID, err := getEnvironmentUUID(m)
 	if err != nil {
 		logrus.Fatalf("Error reading stack metadata info: %v", err)
 	}
 
 	return &MetadataClient{
-		MetadataClient: m,
+		MetadataClient:  m,
+		EnvironmentUUID: envUUID,
 	}, nil
 }
 
@@ -75,7 +77,7 @@ func (m *MetadataClient) GetMetadataLBConfigs(lbEndpointServiceLabel string, tar
 				logrus.Debugf("LB label exists for service : %v", service)
 				lbConfig := model.LBConfig{}
 				lbConfig.LBEndpoint = lb_endpoint
-				lbConfig.LBTargetPoolName = service.UUID + targetRancherSuffix
+				lbConfig.LBTargetPoolName = service.Name + "_" + m.EnvironmentUUID + "_" + targetRancherSuffix
 				if err = m.getContainerLBTargets(&lbConfig, service); err != nil {
 					continue
 				}
