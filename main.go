@@ -64,8 +64,8 @@ func setEnv() {
 
 	targetRancherSuffix = os.Getenv("LB_TARGET_RANCHER_SUFFIX")
 	if len(targetRancherSuffix) == 0 {
-		logrus.Info("LB_TARGET_RANCHER_SUFFIX is not set, using default suffix '_rancher.internal'")
-		targetRancherSuffix = "_rancher.internal"
+		logrus.Info("LB_TARGET_RANCHER_SUFFIX is not set, using default suffix 'rancher.internal'")
+		targetRancherSuffix = "rancher.internal"
 	}
 
 	lbEndpointServiceLabel = "io.rancher.service.external_lb_endpoint"
