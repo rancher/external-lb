@@ -74,7 +74,7 @@ func (m *MetadataClient) GetMetadataLBConfigs(lbEndpointServiceLabel string, tar
 					continue
 				}
 
-				logrus.Debugf("LB label exists for service : %v", service)
+				logrus.Debugf("LB label exists for service : %v", service.Name)
 				lbConfig := model.LBConfig{}
 				lbConfig.LBEndpoint = lb_endpoint
 				lbConfig.LBTargetPoolName = service.Name + "_" + m.EnvironmentUUID + "_" + targetRancherSuffix
