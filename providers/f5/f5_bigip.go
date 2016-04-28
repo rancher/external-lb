@@ -59,9 +59,9 @@ func (*F5BigIPHandler) GetName() string {
 
 func (*F5BigIPHandler) AddLBConfig(config model.LBConfig) error {
 
-	_, err := client.GetVirtualServer(config.LBEndpoint)
-	if err != nil {
-		logrus.Errorf("f5 AddLBConfig: Error getting f5 virtual server: %v\n", err)
+	vServer, err := client.GetVirtualServer(config.LBEndpoint)
+	if err != nil || vServer == nil {
+		logrus.Errorf("f5 AddLBConfig: Error getting f5 virtual server, cannot add the config: %v\n", err)
 		return err
 	} else {
 		//virtualserver exists, add nodes and pool
