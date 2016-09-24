@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/rancher/external-lb/model"
 	"github.com/rancher/external-lb/providers"
 	"github.com/rancher/external-lb/providers/elbv1/elbv1svc"
@@ -187,12 +188,18 @@ func (p *AWSELBv1Provider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", fmt.Errorf("Could not find ELB named '%s'", config.LBEndpoint)
 	}
 
+	if !checkListenersInstancePort(lb, config.LBTargetPort) {
+		return "", fmt.Errorf(
+			"ELB '%s' is not configured with instance port matching the service port '%s'",
+			config.LBEndpoint, config.LBTargetPort)
+	}
+
 	ec2InstanceIds, err := p.getEC2Instances(config.LBTargets)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get EC2 instances: %v", err)
 	}
 
-	// update the ELB backend instances
+	// register ELB instances
 	if err := p.ensureBackendInstances(config.LBEndpoint, ec2InstanceIds); err != nil {
 		return "", fmt.Errorf("Failed to ensure registered instances: %v", err)
 	}
@@ -222,18 +229,24 @@ func (p *AWSELBv1Provider) UpdateLBConfig(config model.LBConfig) (string, error)
 		return "", fmt.Errorf("Could not find ELB named '%s'", config.LBEndpoint)
 	}
 
+	if !checkListenersInstancePort(lb, config.LBTargetPort) {
+		return "", fmt.Errorf(
+			"ELB '%s' is not configured with instance port matching the service port '%s'",
+			config.LBEndpoint, config.LBTargetPort)
+	}
+
 	ec2InstanceIds, err := p.getEC2Instances(config.LBTargets)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get EC2 instances: %v", err)
 	}
 
-	// update the ELB instances
+	// update ELB instances
 	if err := p.ensureBackendInstances(config.LBEndpoint, ec2InstanceIds); err != nil {
 		return "", fmt.Errorf("Failed to ensure registered instances on ELB %s: %v",
 			config.LBEndpoint, err)
 	}
 
-	// update the tags
+	// update ELB tags
 	tags := map[string]string{
 		TagNameTargetPool:  config.LBTargetPoolName,
 		TagNameServicePort: config.LBTargetPort,
@@ -258,12 +271,12 @@ func (p *AWSELBv1Provider) RemoveLBConfig(config model.LBConfig) error {
 		return fmt.Errorf("Could not find ELB load balancer named '%s'", config.LBEndpoint)
 	}
 
-	// Remove all instances
+	// deregister all instances
 	if err := p.ensureBackendInstances(*lb.LoadBalancerName, nil); err != nil {
 		return fmt.Errorf("Failed to clean up registered instances: %v", err)
 	}
 
-	// Remove tag
+	// remove ELB tags
 	if err := p.svc.RemoveLBTag(*lb.LoadBalancerName, TagNameTargetPool); err != nil {
 		return fmt.Errorf("Failed to remove targetPool tag: %v", err)
 	}
@@ -308,8 +321,8 @@ func (p *AWSELBv1Provider) ensureBackendInstances(loadBalancerName string, insta
 	return nil
 }
 
-// looks up the EC2 instances for each of the HostIP in the specified model.LBTarget slice
-// and returns their IDs.
+// looks up the EC2 instances for each of the HostIP in the
+// specified model.LBTarget slice and returns their IDs.
 func (p *AWSELBv1Provider) getEC2Instances(targets []model.LBTarget) ([]string, error) {
 	var instanceIds []string
 	var targetIps []string
@@ -335,4 +348,18 @@ func (p *AWSELBv1Provider) getEC2Instances(targets []model.LBTarget) ([]string, 
 	}
 
 	return instanceIds, nil
+}
+
+// checks whether the specified ELB has a listener
+// whose instance port matches the specified port
+func checkListenersInstancePort(lb *elb.LoadBalancerDescription, port string) bool {
+	found := false
+	for _, desc := range lb.ListenerDescriptions {
+		if strconv.FormatInt(*desc.Listener.InstancePort, 10) == port {
+			found = true
+			break
+		}
+	}
+
+	return found
 }
