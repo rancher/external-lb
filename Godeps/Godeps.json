@@ -1,27 +1,47 @@
 {
 	"ImportPath": "github.com/rancher/external-lb",
 	"GoVersion": "go1.6",
+	"GodepVersion": "v70",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7",
-			"Rev": "418b41d23a1bf978c06faea5313ba194650ac088"
+			"Comment": "v0.10.0-38-g3ec0642",
+			"Rev": "3ec0642a7fb6488f65b06f9040adc67e3990296a"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
-			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
-			"Rev": "ad4d7a5882b961e07e2626045eb995c022ac6664"
+			"Comment": "v1.1-25-g0a192a1",
+			"Rev": "0a192a193177452756c362c20087ddafcf6829c4"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.0.0-20-ga69d25b",
+			"Rev": "a69d25be2fe2923a97c2af6849b2f52426f68fc0"
 		},
 		{
 			"ImportPath": "github.com/rancher/go-rancher-metadata/metadata",
-			"Rev": "abd61bf46372e5f25921d716005940017916c091"
+			"Rev": "1e18111ea0df2484398d7c96bb21b6f27f975311"
+		},
+		{
+			"ImportPath": "github.com/rancher/go-rancher/client",
+			"Comment": "v0.1.0-173-g37c17e4",
+			"Rev": "37c17e456a2d6dce279f54ee2f957797d30a20dc"
 		},
 		{
 			"ImportPath": "github.com/scottdware/go-bigip",
 			"Rev": "47f9a288d982285078ad80951d23a2c3177820e3"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "30de6d19a3bd89a5f38ae4028e23aaa5582648af"
 		}
 	]
 }
