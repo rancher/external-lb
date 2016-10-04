@@ -21,7 +21,7 @@ func healthcheck(w http.ResponseWriter, req *http.Request) {
 	// 1) test metadata server
 	_, err := m.MetadataClient.GetSelfStack()
 	if err != nil {
-		logrus.Error("Metadata health check failed: %v", err)
+		logrus.Errorf("Metadata health check failed: %v", err)
 		http.Error(w, "Failed to reach metadata server", http.StatusInternalServerError)
 	} else {
 		// 2) test provider
