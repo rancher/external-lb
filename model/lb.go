@@ -1,9 +1,10 @@
 package model
 
 type LBConfig struct {
-	LBEndpoint   string
+	LBEndpoint       string
 	LBTargetPoolName string
-	LBTargets    []LBTarget
+	LBTargetPort     string
+	LBTargets        []LBTarget
 }
 
 type LBTarget struct {
