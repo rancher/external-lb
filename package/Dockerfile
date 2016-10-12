@@ -1,3 +1,4 @@
-FROM ubuntu:16.04
+FROM alpine:3.4
+RUN apk add --no-cache ca-certificates 
 COPY external-lb /usr/bin/
-CMD ["external-lb"]
+ENTRYPOINT ["/usr/bin/external-lb"]
