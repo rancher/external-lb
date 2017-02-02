@@ -1,15 +1,15 @@
 external-lb
 ==========
-Rancher service facilitating integration of rancher with external load balancers. This service updates external LB with services created in Rancher that ask to be load balanced using an external LB. 
+Rancher service facilitating integration of rancher with external load balancers. This service updates external LB with services created in Rancher that ask to be load balanced using an external LB.
 Initial version comes with f5 BIG-IP support; but a pluggable provider model makes it easy to implement other providers later.
 
 Design
 ==========
-* The external-lb gets deployed as a Rancher service containerized app. 
+* The external-lb gets deployed as a Rancher service containerized app.
 
-* It enables any other service to be registered to external LB if the service has exposed a public port and has the label 'io.rancher.service.external_lb_endpoint'
+* It enables any other service to be registered to external LB if the service has exposed a public port and has the label 'io.rancher.service.external_lb_endpoint'.
 
-* Value of this label should be equal to the external LB endpoint that should be used for this service - example the VirtualServer Name for f5 BIG-IP
+* Value of this label should be equal to the external LB endpoint that should be used for this service - example the VirtualServer Name for f5 BIG-IP. It is possible to provide multiple values separated by comma (",") in case you want different external LBs route traffic to the same service.
 
 * The external-lb service will fetch info from rancher-metadata server at a periodic interval, then compare it with the data returned by the LB provider, and propagate the changes to the LB provider.
 

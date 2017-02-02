@@ -66,22 +66,15 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[stri
 		logrus.Infof("Error reading services: %v", err)
 	} else {
 		for _, service := range services {
-			endpoint, ok := service.Labels[serviceLabelEndpoint]
+			endpoints, ok := service.Labels[serviceLabelEndpoint]
 			if !ok {
-				endpoint, ok = service.Labels[serviceLabelEndpointLegacy]
+				endpoints, ok = service.Labels[serviceLabelEndpointLegacy]
 			}
 			if !ok {
 				continue
 			}
 
 			logrus.Debugf("LB label exists for service : %v", service.Name)
-			// Configure this service only if this endpoint is already not used by some other service so far
-			_, ok = lbConfigs[endpoint]
-			if ok {
-				logrus.Errorf("Endpoint %s already used by another service, will skip this service : %s",
-					endpoint, service.Name)
-				continue
-			}
 
 			// get the service port
 			if len(service.Ports) == 0 {
@@ -98,17 +91,32 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[stri
 				continue
 			}
 
-			lbConfig := model.LBConfig{}
-			lbConfig.LBEndpoint = endpoint
-			lbConfig.LBTargetPort = portspec[0]
-			lbConfig.LBTargetPoolName = fmt.Sprintf("%s_%s_%s_%s", service.Name, service.StackName,
-				m.EnvironmentUUID, targetPoolSuffix)
+			for _, endpoint := range strings.Split(endpoints, ",") {
+				endpoint = strings.TrimSpace(endpoint)
+				if len(endpoint) == 0 {
+					continue
+				}
 
-			if err = m.getContainerLBTargets(&lbConfig, service); err != nil {
-				continue
+				// Configure this service only if this endpoint is already not used by some other service so far
+				_, ok = lbConfigs[endpoint]
+				if ok {
+					logrus.Errorf("Endpoint %s already used by another service, will skip this service : %s",
+						endpoint, service.Name)
+					continue
+				}
+
+				lbConfig := model.LBConfig{}
+				lbConfig.LBEndpoint = endpoint
+				lbConfig.LBTargetPort = portspec[0]
+				lbConfig.LBTargetPoolName = fmt.Sprintf("%s_%s_%s_%s", service.Name, service.StackName,
+					m.EnvironmentUUID, targetPoolSuffix)
+
+				if err = m.getContainerLBTargets(&lbConfig, service); err != nil {
+					continue
+				}
+
+				lbConfigs[endpoint] = lbConfig
 			}
-
-			lbConfigs[endpoint] = lbConfig
 		}
 	}
 
