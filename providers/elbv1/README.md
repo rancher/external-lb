@@ -28,10 +28,38 @@ The following environment variables are used to configure global options for thi
 
 Note: Instead of specifying AWS credentials when deploying the stack you can create an IAM policy and role and associate it with your EC2 instances.
 
-Example IAM policy with the minimum required permissions
+Required AWS IAM permissions
 ==========
 
-TODO
+The following IAM policy describes the minimum set of permissions needed for the AWS ELBv1 implentation to work.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:DescribeInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:DescribeInstanceHealth",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeTags",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RemoveTags"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 License
 =======
