@@ -88,6 +88,10 @@ func (svc *ELBClassicService) LookupInstancesByFilter(filters []*ec2.Filter) ([]
 			if ec2instance.VpcId != nil {
 				instance.VpcID = *ec2instance.VpcId
 			}
+			if ec2instance.PublicIpAddress != nil {
+				instance.PublicIPAddress = *ec2instance.PublicIpAddress
+			}
+			
 
 			instances = append(instances, instance)
 		}
