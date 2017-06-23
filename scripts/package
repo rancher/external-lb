@@ -13,6 +13,8 @@ TAG=${TAG:-${VERSION}${SUFFIX}}
 REPO=${REPO:-rancher}
 
 cp ../bin/external-lb .
-docker build -t ${REPO}/external-lb:${TAG} .
 
-echo Built ${REPO}/external-lb:${TAG}
+IMAGE=${REPO}/external-lb:${TAG}
+docker build -t ${IMAGE} .
+echo ${IMAGE} > ../dist/images
+echo Built ${IMAGE}
