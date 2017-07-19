@@ -14,7 +14,11 @@ type dockerTask struct {
 	privatePort int    // private port
 }
 
-func NewDockerTask(serviceName string, portType string, ipAddr string, publicPort int, privatePort int) *dockerTask {
+func NewDockerTask(serviceName string,
+	portType string,
+	ipAddr string,
+	publicPort int,
+	privatePort int) *dockerTask {
 	return &dockerTask{serviceName, portType, ipAddr, publicPort, privatePort}
 }
 
