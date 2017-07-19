@@ -33,24 +33,3 @@ type dockerTasks map[string]*dockerTask
 func NewDockerTasks() dockerTasks {
 	return make(dockerTasks)
 }
-
-// serviceName -> (taskKey -> dockerTask)
-type tasksCache map[string]dockerTasks
-
-func NewTaskCache() tasksCache {
-	return make(map[string]dockerTasks)
-}
-
-type currentConfig struct {
-	services     map[string]bool // services added or deleted
-	tasksAdded   tasksCache      // tasks added
-	tasksDeleted tasksCache      // tasks deleted
-}
-
-func NewCurrentConfig() *currentConfig {
-	services := make(map[string]bool)
-	tasksAdded := NewTaskCache()
-	tasksDeleted := NewTaskCache()
-
-	return &currentConfig{services, tasksAdded, tasksDeleted}
-}
