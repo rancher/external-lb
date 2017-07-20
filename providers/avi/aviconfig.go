@@ -47,7 +47,7 @@ func GetAviConfig() (*AviConfig, error) {
 	// conf[AVI_DNS_SUBDOMAIN] = os.Getenv(AVI_DNS_SUBDOMAIN)
 
 	b, _ := json.MarshalIndent(conf, "", " ")
-	log().Infof("Configured provider %s with values %s \n",
+	log.Infof("Configured provider %s with values %s \n",
 		ProviderName, string(b))
 
 	return validateConfig(conf)
@@ -73,12 +73,12 @@ func validateConfig(conf map[string]string) (*AviConfig, error) {
 	var port int
 	var err error
 	if conf[AVI_CONTROLLER_PORT] == "" {
-		log().Warn("AVI_CONTROLLER_PORT is not set, using 443 as default.")
+		log.Warn("AVI_CONTROLLER_PORT is not set, using 443 as default.")
 		port = 443
 	} else {
 		port, err = strconv.Atoi(conf[AVI_CONTROLLER_PORT])
 		if err != nil {
-			log().Errorf("Error controller port: %v", err)
+			log.Errorf("Error controller port: %v", err)
 			return cfg, err
 		}
 	}
@@ -95,21 +95,21 @@ func validateConfig(conf map[string]string) (*AviConfig, error) {
 	if sslVerify {
 		if conf[AVI_CA_CERT_PATH] != "" {
 			// check if path exists
-			log().Info("Using system default path for CA certificates")
+			log.Info("Using system default path for CA certificates")
 		} else {
-			log().Infof("Using CA certificate path %s", conf[AVI_CA_CERT_PATH])
+			log.Infof("Using CA certificate path %s", conf[AVI_CA_CERT_PATH])
 		}
 	}
 	cfg.sslVerify = sslVerify
 	cfg.caCertPath = conf[AVI_CA_CERT_PATH]
 
 	//if conf[AVI_CLOUD_NAME] == "" {
-	// log().Info("AVI_CLOUD_NAME not set, using Default-Cloud")
+	// log.Info("AVI_CLOUD_NAME not set, using Default-Cloud")
 	// conf[AVI_CLOUD_NAME] = "Default-Cloud"
 	//}
 
 	//if conf[AVI_DNS_SUBDOMAIN] == "" {
-	//log().Info("AVI_DNS_SUBDOMAIN not set")
+	//log.Info("AVI_DNS_SUBDOMAIN not set")
 	//}
 
 	cfg.cloudName = "Default-Cloud"

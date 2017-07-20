@@ -8,21 +8,17 @@ import (
 	"github.com/rancher/external-lb/providers"
 )
 
-var _log *logrus.Entry
+var log *logrus.Entry
 
-func init() {
-	providers.RegisterProvider(ProviderName, new(AviProvider))
-	_log = GetLogger()
-}
-
-func GetLogger() *logrus.Entry {
-	return logrus.WithFields(logrus.Fields{
+func initLogger() {
+	log = logrus.WithFields(logrus.Fields{
 		"provider": ProviderName,
 	})
 }
 
-func log() *logrus.Entry {
-	return _log
+func init() {
+	providers.RegisterProvider(ProviderName, new(AviProvider))
+	initLogger()
 }
 
 type AviProvider struct {
@@ -43,7 +39,7 @@ func (p *AviProvider) Init() error {
 	}
 
 	p.aviSession = aviSession
-	log().Info("Avi configuration OK")
+	log.Info("Avi configuration OK")
 	return nil
 }
 
@@ -52,14 +48,14 @@ func (p *AviProvider) GetName() string {
 }
 
 func (p *AviProvider) HealthCheck() error {
-	log().Debug("Running health check on Avi...")
+	log.Debug("Running health check on Avi...")
 	_, err := p.aviSession.Get("")
 	if err != nil {
-		log().Errorf("Health check failed with error %s", err)
+		log.Errorf("Health check failed with error %s", err)
 		return err
 	}
 
-	log().Debug("Connection to Avi is OK")
+	log.Debug("Connection to Avi is OK")
 	return nil
 }
 
@@ -83,10 +79,10 @@ func (p *AviProvider) AddLBConfig(config model.LBConfig) (string, error) {
 
 	fqdn, err := GetVsFqdn(vs)
 	if err != nil {
-		log().Warnf("%s", err)
+		log.Warnf("%s", err)
 	}
 
-	log().Debugf("FQDN for VS %s : %s", vsName, fqdn)
+	log.Debugf("FQDN for VS %s : %s", vsName, fqdn)
 	return fqdn, nil
 }
 
@@ -117,7 +113,7 @@ func (p *AviProvider) RemoveLBConfig(config model.LBConfig) error {
 }
 
 func (p *AviProvider) UpdateLBConfig(config model.LBConfig) (string, error) {
-	log().Infof("UpdateLBConfig called with config %s", config)
+	log.Infof("UpdateLBConfig called with config %s", config)
 	return "", nil
 }
 

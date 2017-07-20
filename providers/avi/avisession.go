@@ -103,9 +103,9 @@ func NewAviSession(host string, username string, password string, insecure bool)
 }
 
 func (avisession *AviSession) InitiateSession() error {
-	log().Debug("Initiating session %s, %s, %s", avisession.prefix, avisession.username, avisession.insecure)
+	log.Debug("Initiating session %s, %s, %s", avisession.prefix, avisession.username, avisession.insecure)
 	if avisession.insecure == true {
-		log().Warn("Strict certificate verification is *DISABLED*")
+		log.Warn("Strict certificate verification is *DISABLED*")
 	}
 
 	// initiate http session here
@@ -118,14 +118,14 @@ func (avisession *AviSession) InitiateSession() error {
 	cred["password"] = avisession.password
 	res, rerror := avisession.Post("login", cred)
 	if rerror != nil {
-		log().Warn("Unable to initiate HTTP(S) session with Avi: ", rerror)
+		log.Warn("Unable to initiate HTTP(S) session with Avi: ", rerror)
 		return rerror
 	}
 	// now session id is set too
 
-	log().Debug("response: ", res)
+	log.Debug("response: ", res)
 	if res != nil && reflect.TypeOf(res).Kind() != reflect.String {
-		log().Debug("results: ", res.(interface{}), " error: ", rerror)
+		log.Debug("results: ", res.(interface{}), " error: ", rerror)
 	}
 
 	return nil
@@ -178,7 +178,7 @@ func (avi *AviSession) rest_request(verb string, uri string, payload interface{}
 		req.AddCookie(&http.Cookie{Name: "sessionid", Value: avi.sessionid})
 	}
 
-	log().Debug("Request headers: ", req.Header)
+	log.Debug("Request headers: ", req.Header)
 	// dump, err := httputil.DumpRequestOut(req, true)
 	// debug(dump, err)
 	client := &http.Client{Transport: tr}
@@ -195,16 +195,16 @@ func (avi *AviSession) rest_request(verb string, uri string, payload interface{}
 
 	// collect cookies from the resp
 	for _, cookie := range resp.Cookies() {
-		log().Debug("cookie: ", cookie)
+		log.Debug("cookie: ", cookie)
 		if cookie.Name == "csrftoken" {
 			avi.csrf_token = cookie.Value
-			log().Debug("Set the csrf token to ", avi.csrf_token)
+			log.Debug("Set the csrf token to ", avi.csrf_token)
 		}
 		if cookie.Name == "sessionid" {
 			avi.sessionid = cookie.Value
 		}
 	}
-	log().Debug("Response code: ", resp.StatusCode)
+	log.Debug("Response code: ", resp.StatusCode)
 
 	if resp.StatusCode == 419 {
 		// session got reset; try again
@@ -218,11 +218,11 @@ func (avi *AviSession) rest_request(verb string, uri string, payload interface{}
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		log().Debug("Error: ", resp)
+		log.Debug("Error: ", resp)
 		bres, berr := ioutil.ReadAll(resp.Body)
 		if berr == nil {
 			mres, _ := ConvertAviResponseToMapInterface(bres)
-			log().Debug("Error resp: ", mres)
+			log.Debug("Error resp: ", mres)
 		}
 		return result, errorResult
 	}
@@ -256,7 +256,7 @@ func debug(data []byte, err error) {
 	if err == nil {
 		fmt.Printf("%s\n\n", data)
 	} else {
-		log().Fatalf("%s\n\n", err)
+		log.Fatalf("%s\n\n", err)
 	}
 }
 

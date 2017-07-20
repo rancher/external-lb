@@ -23,12 +23,13 @@ func NewDockerTask(serviceName string,
 }
 
 func makeKey(ipAddr string, port string) string {
-	sep := "-"
+	const sep = "-"
 	return strings.Join([]string{ipAddr, port}, sep)
 }
 
 func (dt *dockerTask) Key() string {
-	return makeKey(dt.ipAddr, strconv.Itoa(dt.publicPort))
+	port := strconv.Itoa(dt.publicPort)
+	return makeKey(dt.ipAddr, port)
 }
 
 // taskKey -> dockerTask

@@ -15,7 +15,9 @@ func (p *AviProvider) updateVs(vs map[string]interface{}) error {
 	return err
 }
 
-func (p *AviProvider) checkExisitngPool(vs map[string]interface{}, poolName string) (map[string]interface{}, error) {
+func (p *AviProvider) checkExisitngPool(vs map[string]interface{},
+	poolName string) (map[string]interface{}, error) {
+
 	empty := make(map[string]interface{})
 	poolUrl := vs["pool_ref"].(string)
 	u, err := url.Parse(poolUrl)
@@ -36,7 +38,9 @@ func (p *AviProvider) checkExisitngPool(vs map[string]interface{}, poolName stri
 	return aviPool, nil
 }
 
-func (p *AviProvider) ensureVsHasPool(vs map[string]interface{}, poolName string) (map[string]interface{}, error) {
+func (p *AviProvider) ensureVsHasPool(vs map[string]interface{},
+	poolName string) (map[string]interface{}, error) {
+
 	empty := make(map[string]interface{})
 	if _, ok := vs["pool_ref"]; !ok {
 		// pool doesn't exist; create one
@@ -55,7 +59,8 @@ func (p *AviProvider) ensureVsHasPool(vs map[string]interface{}, poolName string
 	return p.checkExisitngPool(vs, poolName)
 }
 
-func (p *AviProvider) addNewMembersToPool(pool map[string]interface{}, config model.LBConfig) error {
+func (p *AviProvider) addNewMembersToPool(pool map[string]interface{},
+	config model.LBConfig) error {
 	vsName := config.LBEndpoint
 	dockerTasks := NewDockerTasks()
 	for _, host := range config.LBTargets {
@@ -72,7 +77,8 @@ func (p *AviProvider) addNewMembersToPool(pool map[string]interface{}, config mo
 	return nil
 }
 
-func (p *AviProvider) removeMembersFromPool(pool map[string]interface{}, config model.LBConfig) error {
+func (p *AviProvider) removeMembersFromPool(pool map[string]interface{},
+	config model.LBConfig) error {
 	vsName := config.LBEndpoint
 	dockerTasks := NewDockerTasks()
 	for _, host := range config.LBTargets {
@@ -89,7 +95,8 @@ func (p *AviProvider) removeMembersFromPool(pool map[string]interface{}, config 
 	return nil
 }
 
-func formLBConfig(vs map[string]interface{}, pool map[string]interface{}) model.LBConfig {
+func formLBConfig(vs map[string]interface{},
+	pool map[string]interface{}) model.LBConfig {
 	lbTargets := make([]model.LBTarget, 0)
 	defaultPort := ""
 	if _, ok := pool["default_server_port"]; ok {
@@ -128,7 +135,8 @@ func GetVsFqdn(vs map[string]interface{}) (string, error) {
 
 	_, hasDnsInfo := data["dns_info"]
 	if !hasDnsInfo {
-		return "", fmt.Errorf("DNS Info not found in VS response %s", vs)
+		err := fmt.Errorf("DNS Info not found in VS response %s", vs)
+		return "", err
 	}
 
 	dnsInfo := data["dns_info"].([]interface{})[0].(map[string]interface{})
