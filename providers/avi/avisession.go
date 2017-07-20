@@ -12,8 +12,6 @@ import (
 	"reflect"
 )
 
-type AviRawDataType map[string]interface{}
-
 type aviResult struct {
 	// Code should match the HTTP status code.
 	Code int `json:"code"`
@@ -127,7 +125,7 @@ func (avisession *AviSession) InitiateSession() error {
 
 	log().Debug("response: ", res)
 	if res != nil && reflect.TypeOf(res).Kind() != reflect.String {
-		log().Debug("results: ", res.(AviRawDataType), " error: ", rerror)
+		log().Debug("results: ", res.(interface{}), " error: ", rerror)
 	}
 
 	return nil
@@ -304,28 +302,4 @@ func (avi *AviSession) GetCollection(uri string) (AviCollectionResult, error) {
 
 func (avi *AviSession) PostRaw(uri string, payload interface{}) ([]byte, error) {
 	return avi.rest_request("POST", uri, payload)
-}
-
-func GetVsFqdn(vs AviRawDataType) (string, error) {
-	if _, ok := vs["data"]; !ok {
-		return "", fmt.Errorf("No data found in VS response %s", vs)
-	}
-
-	data := vs["data"].(AviRawDataType)
-
-	_, hasFQDN := data["fqdn"]
-	if hasFQDN {
-		fqdn := data["fqdn"].(string)
-		if fqdn != "" {
-			return fqdn, nil
-		}
-	}
-
-	_, hasDnsInfo := data["dns_info"]
-	if !hasDnsInfo {
-		return "", fmt.Errorf("DNS Info not found in VS response %s", vs)
-	}
-
-	dnsInfo := data["dns_info"].([]interface{})[0].(AviRawDataType)
-	return dnsInfo["fqdn"].(string), nil
 }
