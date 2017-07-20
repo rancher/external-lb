@@ -8,6 +8,12 @@ import (
 	"github.com/rancher/external-lb/model"
 )
 
+const (
+	POOL_ADD = iota
+	POOL_REMOVE
+	POOL_RECONCILE
+)
+
 func (p *AviProvider) updateVs(vs map[string]interface{}) error {
 	vsUuid := vs["uuid"].(string)
 	uri := "/api/virtualservice?uuid=" + vsUuid
@@ -17,7 +23,6 @@ func (p *AviProvider) updateVs(vs map[string]interface{}) error {
 
 func (p *AviProvider) checkExisitngPool(vs map[string]interface{},
 	poolName string) (map[string]interface{}, error) {
-
 	empty := make(map[string]interface{})
 	poolUrl := vs["pool_ref"].(string)
 	u, err := url.Parse(poolUrl)
@@ -40,7 +45,6 @@ func (p *AviProvider) checkExisitngPool(vs map[string]interface{},
 
 func (p *AviProvider) ensureVsHasPool(vs map[string]interface{},
 	poolName string) (map[string]interface{}, error) {
-
 	empty := make(map[string]interface{})
 	if _, ok := vs["pool_ref"]; !ok {
 		// pool doesn't exist; create one
@@ -59,8 +63,8 @@ func (p *AviProvider) ensureVsHasPool(vs map[string]interface{},
 	return p.checkExisitngPool(vs, poolName)
 }
 
-func (p *AviProvider) addNewMembersToPool(pool map[string]interface{},
-	config model.LBConfig) error {
+func (p *AviProvider) convergePoolMembers(pool map[string]interface{},
+	config model.LBConfig, op int) error {
 	vsName := config.LBEndpoint
 	dockerTasks := NewDockerTasks()
 	for _, host := range config.LBTargets {
@@ -69,30 +73,17 @@ func (p *AviProvider) addNewMembersToPool(pool map[string]interface{},
 		dockerTasks[dt.Key()] = dt
 	}
 
-	err := p.AddPoolMembers(pool, dockerTasks)
-	if err != nil {
-		return err
+	var err error
+	switch op {
+	case POOL_ADD:
+		err = p.AddPoolMembers(pool, dockerTasks)
+	case POOL_REMOVE:
+		err = p.RemovePoolMembers(pool, dockerTasks)
+	case POOL_RECONCILE:
+		err = p.UpdatePoolMembers(pool, dockerTasks)
 	}
 
-	return nil
-}
-
-func (p *AviProvider) removeMembersFromPool(pool map[string]interface{},
-	config model.LBConfig) error {
-	vsName := config.LBEndpoint
-	dockerTasks := NewDockerTasks()
-	for _, host := range config.LBTargets {
-		hostPort, _ := strconv.Atoi(host.Port)
-		dt := NewDockerTask(vsName, "tcp", host.HostIP, hostPort, -1)
-		dockerTasks[dt.Key()] = dt
-	}
-
-	err := p.RemovePoolMembers(pool, dockerTasks)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func formLBConfig(vs map[string]interface{},
@@ -142,3 +133,57 @@ func GetVsFqdn(vs map[string]interface{}) (string, error) {
 	dnsInfo := data["dns_info"].([]interface{})[0].(map[string]interface{})
 	return dnsInfo["fqdn"].(string), nil
 }
+
+//func (p *AviProvider) addNewMembersToPool(pool map[string]interface{},
+//	config model.LBConfig) error {
+//	vsName := config.LBEndpoint
+//	dockerTasks := NewDockerTasks()
+//	for _, host := range config.LBTargets {
+//		hostPort, _ := strconv.Atoi(host.Port)
+//		dt := NewDockerTask(vsName, "tcp", host.HostIP, hostPort, -1)
+//		dockerTasks[dt.Key()] = dt
+//	}
+//
+//	err := p.AddPoolMembers(pool, dockerTasks)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
+//
+//func (p *AviProvider) removeMembersFromPool(pool map[string]interface{},
+//	config model.LBConfig) error {
+//	vsName := config.LBEndpoint
+//	dockerTasks := NewDockerTasks()
+//	for _, host := range config.LBTargets {
+//		hostPort, _ := strconv.Atoi(host.Port)
+//		dt := NewDockerTask(vsName, "tcp", host.HostIP, hostPort, -1)
+//		dockerTasks[dt.Key()] = dt
+//	}
+//
+//	err := p.RemovePoolMembers(pool, dockerTasks)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
+//
+//func (p *AviProvider) updatePoolMembers(pool map[string]interface{},
+//	config model.LBConfig) error {
+//	vsName := config.LBEndpoint
+//	dockerTasks := NewDockerTasks()
+//	for _, host := range config.LBTargets {
+//		hostPort, _ := strconv.Atoi(host.Port)
+//		dt := NewDockerTask(vsName, "tcp", host.HostIP, hostPort, -1)
+//		dockerTasks[dt.Key()] = dt
+//	}
+//
+//	err := p.UpdatePoolMembers(pool, dockerTasks)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}

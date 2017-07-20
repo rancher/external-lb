@@ -39,49 +39,6 @@ func (val ErrServerConnection) String() string {
 	return fmt.Sprintf("ErrServerConnection(%v)", string(val))
 }
 
-var vsJson = `{
-       "uri_path":"/api/virtualservice",
-       "model_name":"virtualservice",
-       "data":{
-         "network_profile_name":"System-TCP-Proxy",
-         "flow_dist":"LOAD_AWARE",
-         "delay_fairness":false,
-         "avi_allocated_vip":false,
-         "scaleout_ecmp":false,
-         "analytics_profile_name":"System-Analytics-Profile",
-         "cloud_type":"CLOUD_NONE",
-         "weight":1,
-         "cloud_name":"%s",
-         "avi_allocated_fip":false,
-         "max_cps_per_client":0,
-         "type":"VS_TYPE_NORMAL",
-         "use_bridge_ip_as_vip":false,
-         "ign_pool_net_reach":true,
-         "east_west_placement":false,
-         "limit_doser":false,
-         "ssl_sess_cache_avg_size":1024,
-         "enable_autogw":true,
-         "auto_allocate_ip":true,
-         "enabled":true,
-         "analytics_policy":{
-           "client_insights":"ACTIVE",
-           "metrics_realtime_update":{
-             "duration":60,
-             "enabled":false},
-           "full_client_logs":{
-             "duration":30,
-             "enabled":false},
-           "client_log_filters":[],
-           "client_insights_sampling":{}
-         },
-         "vs_datascripts":[],
-         "application_profile_ref":"%s",
-	 "auto_allocate_ip": true,
-         "name":"%s",
-	 "dns_info": [{"fqdn": "%s"}],
-	 "network_ref": "%s",
-         "pool_ref":"%s",`
-
 func InitAviSession(cfg *AviConfig) (*AviSession, error) {
 	insecure := !cfg.sslVerify
 	portStr := strconv.Itoa(cfg.controllerPort)
@@ -178,6 +135,47 @@ func getPoolMembers(pool interface{}) []map[string]interface{} {
 	// }
 
 	return servers
+}
+
+func (p *AviProvider) UpdatePoolMembers(pool map[string]interface{},
+	allTasks dockerTasks) error {
+	poolName := pool["name"].(string)
+	aviPoolMembers := getPoolMembers(pool)
+	retained := make([]interface{}, 0)
+	for _, server := range aviPoolMembers {
+		ip := server["ip"].(map[string]interface{})
+		ipAddr := ip["addr"].(string)
+		port := strconv.FormatInt(int64(server["port"].(float64)), 10)
+		key := makeKey(ipAddr, port)
+		if _, ok := allTasks[key]; ok {
+			// this is retained
+			retained = append(retained, server)
+			delete(allTasks, key)
+		}
+	}
+
+	if len(allTasks) >= 1 {
+		for _, dt := range allTasks {
+			server := make(map[string]interface{})
+			ip := make(map[string]interface{})
+			ip["type"] = "V4"
+			ip["addr"] = dt.ipAddr
+			server["ip"] = ip
+			server["port"] = dt.publicPort
+			retained = append(retained, server)
+		}
+	}
+
+	poolUuid := pool["uuid"].(string)
+	pool["servers"] = retained
+	log.Debugf("pool %s has updated members: %s", poolName, retained)
+	res, err := p.aviSession.Put("/api/pool/"+poolUuid, pool)
+	if err != nil {
+		log.Infof("Avi update Pool failed: %v", res)
+		return err
+	}
+
+	return nil
 }
 
 func (p *AviProvider) RemovePoolMembers(pool map[string]interface{}, deletedTasks dockerTasks) error {

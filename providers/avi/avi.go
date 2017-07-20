@@ -48,7 +48,6 @@ func (p *AviProvider) GetName() string {
 }
 
 func (p *AviProvider) HealthCheck() error {
-	log.Debug("Running health check on Avi...")
 	_, err := p.aviSession.Get("")
 	if err != nil {
 		log.Errorf("Health check failed with error %s", err)
@@ -72,7 +71,7 @@ func (p *AviProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", err
 	}
 
-	err = p.addNewMembersToPool(pool, config)
+	err = p.convergePoolMembers(pool, config, POOL_ADD)
 	if err != nil {
 		return "", nil
 	}
@@ -104,7 +103,7 @@ func (p *AviProvider) RemoveLBConfig(config model.LBConfig) error {
 		return err
 	}
 
-	err = p.removeMembersFromPool(pool, config)
+	err = p.convergePoolMembers(pool, config, POOL_REMOVE)
 	if err != nil {
 		return err
 	}
@@ -113,8 +112,30 @@ func (p *AviProvider) RemoveLBConfig(config model.LBConfig) error {
 }
 
 func (p *AviProvider) UpdateLBConfig(config model.LBConfig) (string, error) {
-	log.Infof("UpdateLBConfig called with config %s", config)
-	return "", nil
+	vsName := config.LBEndpoint
+	vs, err := p.GetVS(vsName)
+	if err != nil {
+		return "", err
+	}
+
+	poolName := config.LBTargetPoolName
+	pool, err := p.ensureVsHasPool(vs, poolName)
+	if err != nil {
+		return "", err
+	}
+
+	err = p.convergePoolMembers(pool, config, POOL_RECONCILE)
+	if err != nil {
+		return "", err
+	}
+
+	fqdn, err := GetVsFqdn(vs)
+	if err != nil {
+		log.Warnf("%s", err)
+	}
+
+	log.Debugf("FQDN for VS %s : %s", vsName, fqdn)
+	return fqdn, nil
 }
 
 func (p *AviProvider) GetLBConfigs() ([]model.LBConfig, error) {
@@ -133,6 +154,11 @@ func (p *AviProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		}
 
 		lbConfig := formLBConfig(vs, pool)
+		if len(lbConfig.LBTargets) == 0 {
+			// no pool members; skip
+			continue
+		}
+
 		lbConfigs = append(lbConfigs, lbConfig)
 	}
 
