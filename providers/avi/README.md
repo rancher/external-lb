@@ -31,7 +31,7 @@ Environment Variables
 | AVI_PASSWORD             | Password for Avi user. This is optional if you are using Rancher Secrets to provide password. |                    | Yes (if using Rancher Secrets)    |
 | AVI_CONTROLLER_ADDR      | IP Address of Avi Controller.                                                                 |                    | No                                |
 | AVI_CONTROLLER_PORT      | Port to connect to Avi Controller.                                                            | 443                | Yes                               |
-| AVI_SSL_VERIFY           | Enable or Disable SSL certificate validation while connecting to Avi Controller               | True               | Yes                               |
+| AVI_SSL_VERIFY           | Enable or Disable SSL certificate validation while connecting to Avi Controller               | False               | Yes                               |
 | AVI_CLOUD_NAME           | Name of Avi Cloud in which Virtual Services are created.                                      | Default-Cloud      | Yes                               |
 | LB_TARGET_RANCHER_SUFFIX | Pool names in Avi will have this suffix.                                                      | "rancher.internal" | Yes                               |
 

@@ -106,7 +106,9 @@ func validateConfig(conf map[string]string) (*AviConfig, error) {
 	cfg.controllerPort = port
 
 	sslVerify := true
-	if conf[AVI_SSL_VERIFY] == "no" || conf[AVI_SSL_VERIFY] == "false" {
+	if conf[AVI_SSL_VERIFY] == "" ||
+		conf[AVI_SSL_VERIFY] == "no" ||
+		conf[AVI_SSL_VERIFY] == "false" {
 		conf[AVI_SSL_VERIFY] = "false"
 		sslVerify = false
 	} else {
