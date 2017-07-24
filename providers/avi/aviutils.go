@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/rancher/external-lb/model"
 )
@@ -17,12 +18,17 @@ const (
 func (p *AviProvider) updateVs(vs map[string]interface{}) error {
 	vsUuid := vs["uuid"].(string)
 	uri := "/api/virtualservice?uuid=" + vsUuid
-	_, err := p.aviSession.Put(uri, vs)
+	_, err := p.aviSession.Post(uri, vs)
 	return err
 }
 
+func (p *AviProvider) updateVsMetadata(vs map[string]interface{}) error {
+	vs["service_metadata"] = p.cfg.lbSuffix
+	return p.updateVs(vs)
+}
+
 func (p *AviProvider) checkExisitngPool(vs map[string]interface{},
-	poolName string) (map[string]interface{}, error) {
+	rnchrPoolName string) (map[string]interface{}, error) {
 	empty := make(map[string]interface{})
 	poolUrl := vs["pool_ref"].(string)
 	u, err := url.Parse(poolUrl)
@@ -36,10 +42,21 @@ func (p *AviProvider) checkExisitngPool(vs map[string]interface{},
 	}
 
 	aviPoolName := aviPool["name"].(string)
-	if aviPoolName != poolName {
-		aviPool["name"] = poolName
+	if aviPoolName == rnchrPoolName {
+		return aviPool, nil
 	}
 
+	if strings.HasSuffix(aviPoolName, p.cfg.lbSuffix) {
+		vsName := vs["name"].(string)
+		svcName := SvcNameFromRnchrPoolName(aviPoolName)
+		// go p.RaiseDuplicateLabelEvent(vsName, svcName)
+		err := fmt.Errorf("Lable/VS %s already used by service %s",
+			vsName, svcName)
+		return empty, err
+	}
+
+	// overwrite the pool name to match with what Rancher provides
+	aviPool["name"] = rnchrPoolName
 	return aviPool, nil
 }
 
@@ -52,11 +69,13 @@ func (p *AviProvider) ensureVsHasPool(vs map[string]interface{},
 		if err != nil {
 			return empty, err
 		}
+
 		vs["pool_ref"] = pool["url"]
 		err = p.updateVs(vs)
 		if err != nil {
 			return empty, err
 		}
+
 		return pool, nil
 	}
 
@@ -132,6 +151,41 @@ func GetVsFqdn(vs map[string]interface{}) (string, error) {
 
 	dnsInfo := data["dns_info"].([]interface{})[0].(map[string]interface{})
 	return dnsInfo["fqdn"].(string), nil
+}
+
+func SvcNameFromRnchrPoolName(pName string) string {
+	const sep = "_"
+	return strings.Split(pName, sep)[0]
+}
+
+func VsFromCloud(vs map[string]interface{}, cloudRef string) bool {
+	vsCloudRef, ok := vs["cloud_ref"]
+	if ok && vsCloudRef.(string) == cloudRef {
+		// VS not part of this cloud
+		return true
+	}
+
+	return false
+}
+
+func VsHasMetadata(vs map[string]interface{}, metadata string) bool {
+	//TODO: See how to update VS
+	//svcMeta, ok := vs["service_metadata"]
+	//if ok && svcMeta == metadata {
+	//return true
+	//}
+
+	//return false
+	return true
+}
+
+func (p *AviProvider) IsAssociatedVs(vs map[string]interface{}) bool {
+	if VsFromCloud(vs, p.cloudRef) &&
+		VsHasMetadata(vs, p.cfg.lbSuffix) {
+		return true
+	}
+
+	return false
 }
 
 //func (p *AviProvider) addNewMembersToPool(pool map[string]interface{},

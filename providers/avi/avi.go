@@ -10,6 +10,12 @@ import (
 
 var log *logrus.Entry
 
+type AviProvider struct {
+	aviSession *AviSession
+	cfg        *AviConfig
+	cloudRef   string
+}
+
 func initLogger() {
 	log = logrus.WithFields(logrus.Fields{
 		"provider": ProviderName,
@@ -21,24 +27,25 @@ func init() {
 	initLogger()
 }
 
-type AviProvider struct {
-	aviSession *AviSession
-	cfg        *AviConfig
-}
-
 func (p *AviProvider) Init() error {
 	cfg, err := GetAviConfig()
 	if err != nil {
 		return err
 	}
 
-	p.cfg = cfg
 	aviSession, err := InitAviSession(cfg)
 	if err != nil {
 		return err
 	}
 
+	cloudRef, err := aviSession.GetCloudRef(cfg.cloudName)
+	if err != nil {
+		return err
+	}
+
+	p.cfg = cfg
 	p.aviSession = aviSession
+	p.cloudRef = cloudRef
 	log.Info("Avi configuration OK")
 	return nil
 }
@@ -75,6 +82,13 @@ func (p *AviProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	if err != nil {
 		return "", nil
 	}
+
+	//if !VsHasMetadata(vs, p.cfg.lbSuffix) {
+	//err := p.updateVsMetadata(vs)
+	//if err != nil {
+	//return "", err
+	//}
+	//}
 
 	fqdn, err := GetVsFqdn(vs)
 	if err != nil {
@@ -146,6 +160,10 @@ func (p *AviProvider) GetLBConfigs() ([]model.LBConfig, error) {
 	}
 
 	for _, vs := range allVses {
+		if !p.IsAssociatedVs(vs) {
+			continue
+		}
+
 		poolUrl := vs["pool_ref"].(string)
 		u, _ := url.Parse(poolUrl)
 		pool, err := p.GetPool(u.Path)
@@ -154,10 +172,11 @@ func (p *AviProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		}
 
 		lbConfig := formLBConfig(vs, pool)
-		if len(lbConfig.LBTargets) == 0 {
-			// no pool members; skip
-			continue
-		}
+		// TODO: test with empty pool
+		//if len(lbConfig.LBTargets) == 0 {
+		// no pool members; skip
+		//continue
+		//}
 
 		lbConfigs = append(lbConfigs, lbConfig)
 	}

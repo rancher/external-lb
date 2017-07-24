@@ -71,38 +71,6 @@ func (p *AviProvider) CheckPoolExists(poolName string) (bool, map[string]interfa
 	return true, nres.(map[string]interface{}), nil
 }
 
-func (p *AviProvider) GetCloudRef() (string, error) {
-	cloudName := p.cfg.cloudName
-	if cloudName == "Default-Cloud" {
-		return "", nil
-	}
-	cloud, err := p.GetResourceByName("cloud", cloudName)
-	if err != nil {
-		return "", err
-	}
-	return cloud["url"].(string), nil
-}
-
-func (p *AviProvider) GetResourceByName(resource, objname string) (map[string]interface{}, error) {
-	resp := make(map[string]interface{})
-	res, err := p.aviSession.GetCollection("/api/" + resource + "?name=" + objname)
-	if err != nil {
-		log.Infof("Avi object exists check (res: %s, name: %s) failed: %v", resource, objname, res)
-		return resp, err
-	}
-
-	if res.Count == 0 {
-		return resp, fmt.Errorf("Resource name %s of type %s does not exist on the Avi Controller",
-			objname, resource)
-	}
-	nres, err := ConvertAviResponseToMapInterface(res.Results[0])
-	if err != nil {
-		log.Infof("Resource unmarshal failed: %v", string(res.Results[0]))
-		return resp, err
-	}
-	return nres.(map[string]interface{}), nil
-}
-
 func (p *AviProvider) EnsurePoolExists(poolName string) (map[string]interface{}, error) {
 	exists, resp, err := p.CheckPoolExists(poolName)
 	if exists {
@@ -229,7 +197,7 @@ func (p *AviProvider) AddPoolMembers(pool map[string]interface{}, addedTasks doc
 	}
 
 	if len(addedTasks) == 0 {
-		log.Infof("Pool %s has all intended members, no new member to be added.", poolName)
+		log.Infof("Pool %s has all members, no new member to be added.", poolName)
 		return nil
 	}
 
@@ -332,13 +300,8 @@ func (p *AviProvider) CreatePool(poolName string) (map[string]interface{}, error
 	var resp map[string]interface{}
 	pool := make(map[string]string)
 	pool["name"] = poolName
-	cref, err := p.GetCloudRef()
-	if err != nil {
-		return resp, err
-	}
-	if cref != "" {
-		pool["cloud_ref"] = cref
-	}
+	pool["cloud_ref"] = p.cloudRef
+
 	pres, err := p.aviSession.Post("/api/pool", pool)
 	if err != nil {
 		log.Infof("Error creating pool %s: %v", poolName, pres)
@@ -353,6 +316,7 @@ func (p *AviProvider) AddPoolMember(vs *VS, tasks dockerTasks) error {
 	if err != nil {
 		return err
 	}
+
 	if !exists {
 		log.Warnf("Pool %s doesn't exist", vs.poolName)
 		return nil
@@ -366,6 +330,7 @@ func (p *AviProvider) RemovePoolMember(vs *VS, tasks dockerTasks) error {
 	if err != nil {
 		return err
 	}
+
 	if !exists {
 		return nil
 	}

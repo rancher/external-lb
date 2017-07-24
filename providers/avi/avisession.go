@@ -303,3 +303,32 @@ func (avi *AviSession) GetCollection(uri string) (AviCollectionResult, error) {
 func (avi *AviSession) PostRaw(uri string, payload interface{}) ([]byte, error) {
 	return avi.rest_request("POST", uri, payload)
 }
+
+func (avi *AviSession) GetResourceByName(resource, objname string) (map[string]interface{}, error) {
+	resp := make(map[string]interface{})
+	res, err := avi.GetCollection("/api/" + resource + "?name=" + objname)
+	if err != nil {
+		log.Infof("Avi object exists check (res: %s, name: %s) failed: %v", resource, objname, res)
+		return resp, err
+	}
+
+	if res.Count == 0 {
+		return resp, fmt.Errorf("Resource name %s of type %s does not exist on the Avi Controller",
+			objname, resource)
+	}
+	nres, err := ConvertAviResponseToMapInterface(res.Results[0])
+	if err != nil {
+		log.Infof("Resource unmarshal failed: %v", string(res.Results[0]))
+		return resp, err
+	}
+	return nres.(map[string]interface{}), nil
+}
+
+func (avi *AviSession) GetCloudRef(cloudName string) (string, error) {
+	cloud, err := avi.GetResourceByName("cloud", cloudName)
+	if err != nil {
+		return "", err
+	}
+
+	return cloud["url"].(string), nil
+}
