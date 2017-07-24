@@ -32,7 +32,6 @@ Environment Variables
 | AVI_CONTROLLER_ADDR      | IP Address of Avi Controller.                                                                 |                    | No                                |
 | AVI_CONTROLLER_PORT      | Port to connect to Avi Controller.                                                            | 443                | Yes                               |
 | AVI_SSL_VERIFY           | Enable or Disable SSL certificate validation while connecting to Avi Controller               | True               | Yes                               |
-| AVI_CA_CERT_PATH         | In case SSL_VERIFY is True, specify path to CA certificate for validation.                    |                    | Yes (Needed if SSL_VERIFY is set) |
 | AVI_CLOUD_NAME           | Name of Avi Cloud in which Virtual Services are created.                                      | Default-Cloud      | Yes                               |
 | LB_TARGET_RANCHER_SUFFIX | Pool names in Avi will have this suffix.                                                      | "rancher.internal" | Yes                               |
 
