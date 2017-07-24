@@ -17,12 +17,14 @@ const (
 
 func (p *AviProvider) updateVs(vs map[string]interface{}) error {
 	vsUuid := vs["uuid"].(string)
-	uri := "/api/virtualservice?uuid=" + vsUuid
-	_, err := p.aviSession.Post(uri, vs)
+	uri := "/api/virtualservice/" + vsUuid
+	_, err := p.aviSession.Put(uri, vs)
 	return err
 }
 
 func (p *AviProvider) updateVsMetadata(vs map[string]interface{}) error {
+	log.Debugf("Updating service metadata for vs %s",
+		vs["name"].(string))
 	vs["service_metadata"] = p.cfg.lbSuffix
 	return p.updateVs(vs)
 }
@@ -169,14 +171,12 @@ func VsFromCloud(vs map[string]interface{}, cloudRef string) bool {
 }
 
 func VsHasMetadata(vs map[string]interface{}, metadata string) bool {
-	//TODO: See how to update VS
-	//svcMeta, ok := vs["service_metadata"]
-	//if ok && svcMeta == metadata {
-	//return true
-	//}
+	svcMeta, ok := vs["service_metadata"]
+	if ok && svcMeta.(string) == metadata {
+		return true
+	}
 
-	//return false
-	return true
+	return false
 }
 
 func (p *AviProvider) IsAssociatedVs(vs map[string]interface{}) bool {

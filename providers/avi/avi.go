@@ -83,12 +83,12 @@ func (p *AviProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", nil
 	}
 
-	//if !VsHasMetadata(vs, p.cfg.lbSuffix) {
-	//err := p.updateVsMetadata(vs)
-	//if err != nil {
-	//return "", err
-	//}
-	//}
+	if !VsHasMetadata(vs, p.cfg.lbSuffix) {
+		err := p.updateVsMetadata(vs)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	fqdn, err := GetVsFqdn(vs)
 	if err != nil {
@@ -172,12 +172,6 @@ func (p *AviProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		}
 
 		lbConfig := formLBConfig(vs, pool)
-		// TODO: test with empty pool
-		//if len(lbConfig.LBTargets) == 0 {
-		// no pool members; skip
-		//continue
-		//}
-
 		lbConfigs = append(lbConfigs, lbConfig)
 	}
 
