@@ -6,6 +6,129 @@ import (
 	"strings"
 )
 
+// ServerSSLProfiles
+// Documentation: https://devcentral.f5.com/wiki/iControlREST.APIRef_tm_ltm_profile_server-ssl.ashx
+
+// ServerSSLProfiles contains a list of every server-ssl profile on the BIG-IP system.
+type ServerSSLProfiles struct {
+	ServerSSLProfiles []ServerSSLProfile `json:"items"`
+}
+
+// ServerSSLProfile contains information about each server-ssl profile. You can use all
+// of these fields when modifying a server-ssl profile.
+type ServerSSLProfile struct {
+	Name                         string   `json:"name,omitempty"`
+	Partition                    string   `json:"partition,omitempty"`
+	FullPath                     string   `json:"fullPath,omitempty"`
+	Generation                   int      `json:"generation,omitempty"`
+	AlertTimeout                 string   `json:"alertTimeout,omitempty"`
+	Authenticate                 string   `json:"authenticate,omitempty"`
+	AuthenticateDepth            int      `json:"authenticateDepth,omitempty"`
+	CaFile                       string   `json:"caFile,omitempty"`
+	CacheSize                    int      `json:"cacheSize,omitempty"`
+	CacheTimeout                 int      `json:"cacheTimeout,omitempty"`
+	Cert                         string   `json:"cert,omitempty"`
+	Chain                        string   `json:"chain,omitempty"`
+	Ciphers                      string   `json:"ciphers,omitempty"`
+	DefaultsFrom                 string   `json:"defaultsFrom,omitempty"`
+	ExpireCertResponseControl    string   `json:"expireCertResponseControl,omitempty"`
+	GenericAlert                 string   `json:"genericAlert,omitempty"`
+	HandshakeTimeout             string   `json:"handshakeTimeout,omitempty"`
+	Key                          string   `json:"key,omitempty"`
+	ModSslMethods                string   `json:"modSslMethods,omitempty"`
+	Mode                         string   `json:"mode,omitempty"`
+	TmOptions                    []string `json:"tmOptions,omitempty"`
+	Passphrase                   string   `json:"passphrase,omitempty"`
+	PeerCertMode                 string   `json:"peerCertMode,omitempty"`
+	ProxySsl                     string   `json:"proxySsl,omitempty"`
+	RenegotiatePeriod            string   `json:"renegotiatePeriod,omitempty"`
+	RenegotiateSize              string   `json:"renegotiateSize,omitempty"`
+	Renegotiation                string   `json:"renegotiation,omitempty"`
+	RetainCertificate            string   `json:"retainCertificate,omitempty"`
+	SecureRenegotiation          string   `json:"secureRenegotiation,omitempty"`
+	ServerName                   string   `json:"serverName,omitempty"`
+	SessionMirroring             string   `json:"sessionMirroring,omitempty"`
+	SessionTicket                string   `json:"sessionTicket,omitempty"`
+	SniDefault                   string   `json:"sniDefault,omitempty"`
+	SniRequire                   string   `json:"sniRequire,omitempty"`
+	SslForwardProxy              string   `json:"sslForwardProxy,omitempty"`
+	SslForwardProxyBypass        string   `json:"sslForwardProxyBypass,omitempty"`
+	SslSignHash                  string   `json:"sslSignHash,omitempty"`
+	StrictResume                 string   `json:"strictResume,omitempty"`
+	UncleanShutdown              string   `json:"uncleanShutdown,omitempty"`
+	UntrustedCertResponseControl string   `json:"untrustedCertResponseControl,omitempty"`
+}
+
+// ClientSSLProfiles
+// Documentation: https://devcentral.f5.com/wiki/iControlREST.APIRef_tm_ltm_profile_client-ssl.ashx
+
+// ClientSSLProfiles contains a list of every client-ssl profile on the BIG-IP system.
+type ClientSSLProfiles struct {
+	ClientSSLProfiles []ClientSSLProfile `json:"items"`
+}
+
+// ClientSSLProfile contains information about each client-ssl profile. You can use all
+// of these fields when modifying a client-ssl profile.
+type ClientSSLProfile struct {
+	Name              string `json:"name,omitempty"`
+	Partition         string `json:"partition,omitempty"`
+	FullPath          string `json:"fullPath,omitempty"`
+	Generation        int    `json:"generation,omitempty"`
+	AlertTimeout      string `json:"alertTimeout,omitempty"`
+	AllowNonSsl       string `json:"allowNonSsl,omitempty"`
+	Authenticate      string `json:"authenticate,omitempty"`
+	AuthenticateDepth int    `json:"authenticateDepth,omitempty"`
+	CaFile            string `json:"caFile,omitempty"`
+	CacheSize         int    `json:"cacheSize,omitempty"`
+	CacheTimeout      int    `json:"cacheTimeout,omitempty"`
+	Cert              string `json:"cert,omitempty"`
+	CertKeyChain      []struct {
+		Name       string `json:"name,omitempty"`
+		Cert       string `json:"cert,omitempty"`
+		Chain      string `json:"chain,omitempty"`
+		Key        string `json:"key,omitempty"`
+		Passphrase string `json:"passphrase,omitempty"`
+	} `json:"certKeyChain,omitempty"`
+	CertExtensionIncludes           []string `json:"certExtensionIncludes,omitempty"`
+	CertLifespan                    int      `json:"certLifespan,omitempty"`
+	CertLookupByIpaddrPort          string   `json:"certLookupByIpaddrPort,omitempty"`
+	Chain                           string   `json:"chain,omitempty"`
+	Ciphers                         string   `json:"ciphers,omitempty"`
+	ClientCertCa                    string   `json:"clientCertCa,omitempty"`
+	CrlFile                         string   `json:"crlFile,omitempty"`
+	DefaultsFrom                    string   `json:"defaultsFrom,omitempty"`
+	ForwardProxyBypassDefaultAction string   `json:"forwardProxyBypassDefaultAction,omitempty"`
+	GenericAlert                    string   `json:"genericAlert,omitempty"`
+	HandshakeTimeout                string   `json:"handshakeTimeout,omitempty"`
+	InheritCertkeychain             string   `json:"inheritCertkeychain,omitempty"`
+	Key                             string   `json:"key,omitempty"`
+	ModSslMethods                   string   `json:"modSslMethods,omitempty"`
+	Mode                            string   `json:"mode,omitempty"`
+	TmOptions                       []string `json:"tmOptions,omitempty"`
+	Passphrase                      string   `json:"passphrase,omitempty"`
+	PeerCertMode                    string   `json:"peerCertMode,omitempty"`
+	ProxyCaCert                     string   `json:"proxyCaCert,omitempty"`
+	ProxyCaKey                      string   `json:"proxyCaKey,omitempty"`
+	ProxyCaPassphrase               string   `json:"proxyCaPassphrase,omitempty"`
+	ProxySsl                        string   `json:"proxySsl,omitempty"`
+	ProxySslPassthrough             string   `json:"proxySslPassthrough,omitempty"`
+	RenegotiatePeriod               string   `json:"renegotiatePeriod,omitempty"`
+	RenegotiateSize                 string   `json:"renegotiateSize,omitempty"`
+	Renegotiation                   string   `json:"renegotiation,omitempty"`
+	RetainCertificate               string   `json:"retainCertificate,omitempty"`
+	SecureRenegotiation             string   `json:"secureRenegotiation,omitempty"`
+	ServerName                      string   `json:"serverName,omitempty"`
+	SessionMirroring                string   `json:"sessionMirroring,omitempty"`
+	SessionTicket                   string   `json:"sessionTicket,omitempty"`
+	SniDefault                      string   `json:"sniDefault,omitempty"`
+	SniRequire                      string   `json:"sniRequire,omitempty"`
+	SslForwardProxy                 string   `json:"sslForwardProxy,omitempty"`
+	SslForwardProxyBypass           string   `json:"sslForwardProxyBypass,omitempty"`
+	SslSignHash                     string   `json:"sslSignHash,omitempty"`
+	StrictResume                    string   `json:"strictResume,omitempty"`
+	UncleanShutdown                 string   `json:"uncleanShutdown,omitempty"`
+}
+
 // Nodes contains a list of every node on the BIG-IP system.
 type Nodes struct {
 	Nodes []Node `json:"items"`
@@ -29,6 +152,65 @@ type Node struct {
 	State           string `json:"state,omitempty"`
 }
 
+// DataGroups contains a list of data groups on the BIG-IP system.
+type DataGroups struct {
+	DataGroups []DataGroup `json:"items"`
+}
+
+// DataGroups contains information about each data group.
+type DataGroup struct {
+	Name       string
+	Partition  string
+	FullPath   string
+	Generation int
+	Type       string
+	Records    []DataGroupRecord
+}
+
+type DataGroupRecord struct {
+	Name string `json:"name,omitempty"`
+	Data string `json:"data,omitempty"`
+}
+
+type dataGroupDTO struct {
+	Name       string            `json:"name,omitempty"`
+	Partition  string            `json:"partition,omitempty"`
+	FullPath   string            `json:"fullPath,omitempty"`
+	Generation int               `json:"generation,omitempty"`
+	Type       string            `json:"type,omitempty"`
+	Records    []DataGroupRecord `json:"records,omitempty"`
+}
+
+func (p *DataGroup) MarshalJSON() ([]byte, error) {
+	var dto dataGroupDTO
+	marshal(&dto, p)
+	return json.Marshal(dto)
+}
+
+func (p *DataGroup) UnmarshalJSON(b []byte) error {
+	var dto dataGroupDTO
+	err := json.Unmarshal(b, &dto)
+	if err != nil {
+		return err
+	}
+	return marshal(p, &dto)
+}
+
+// SnatPools contains a list of every snatpool on the BIG-IP system.
+type SnatPools struct {
+	SnatPools []SnatPool `json:"items"`
+}
+
+// SnatPool contains information about each individual snatpool. You can use all
+// of these fields when modifying a snatpool.
+type SnatPool struct {
+	Name       string   `json:"name,omitempty"`
+	Partition  string   `json:"partition,omitempty"`
+	FullPath   string   `json:"fullPath,omitempty"`
+	Generation int      `json:"generation,omitempty"`
+	Members    []string `json:"members,omitempty"`
+}
+
 // Pools contains a list of pools on the BIG-IP system.
 type Pools struct {
 	Pools []Pool `json:"items"`
@@ -37,39 +219,13 @@ type Pools struct {
 // Pool contains information about each pool. You can use all of these
 // fields when modifying a pool.
 type Pool struct {
-	Name                   string
-	Partition              string
-	FullPath               string
-	Generation             int
-	AllowNAT               bool
-	AllowSNAT              bool
-	IgnorePersistedWeight  bool
-	IPTOSToClient          string
-	IPTOSToServer          string
-	LinkQoSToClient        string
-	LinkQoSToServer        string
-	LoadBalancingMode      string
-	MinActiveMembers       int
-	MinUpMembers           int
-	MinUpMembersAction     string
-	MinUpMembersChecking   string
-	Monitor                string
-	QueueDepthLimit        int
-	QueueOnConnectionLimit string
-	QueueTimeLimit         int
-	ReselectTries          int
-	SlowRampTime           int
-}
-
-// Pool transfer object so we can mask the bool data munging
-type poolDTO struct {
 	Name                   string `json:"name,omitempty"`
 	Partition              string `json:"partition,omitempty"`
 	FullPath               string `json:"fullPath,omitempty"`
 	Generation             int    `json:"generation,omitempty"`
-	AllowNAT               string `json:"allowNat,omitempty" bool:"yes"`
-	AllowSNAT              string `json:"allowSnat,omitempty" bool:"yes"`
-	IgnorePersistedWeight  string `json:"ignorePersistedWeight,omitempty" bool:"enabled"`
+	AllowNAT               string `json:"allowNat,omitempty"`
+	AllowSNAT              string `json:"allowSnat,omitempty"`
+	IgnorePersistedWeight  string `json:"ignorePersistedWeight,omitempty"`
 	IPTOSToClient          string `json:"ipTosToClient,omitempty"`
 	IPTOSToServer          string `json:"ipTosToServer,omitempty"`
 	LinkQoSToClient        string `json:"linkQosToClient,omitempty"`
@@ -79,32 +235,48 @@ type poolDTO struct {
 	MinUpMembers           int    `json:"minUpMembers,omitempty"`
 	MinUpMembersAction     string `json:"minUpMembersAction,omitempty"`
 	MinUpMembersChecking   string `json:"minUpMembersChecking,omitempty"`
-	Monitor                string `json:"monitor"`
+	Monitor                string `json:"monitor,omitempty"`
 	QueueDepthLimit        int    `json:"queueDepthLimit,omitempty"`
 	QueueOnConnectionLimit string `json:"queueOnConnectionLimit,omitempty"`
 	QueueTimeLimit         int    `json:"queueTimeLimit,omitempty"`
 	ReselectTries          int    `json:"reselectTries,omitempty"`
+	ServiceDownAction      string `json:"serviceDownAction,omitempty"`
 	SlowRampTime           int    `json:"slowRampTime,omitempty"`
 }
 
-func (p *Pool) MarshalJSON() ([]byte, error) {
-	var dto poolDTO
-	marshal(&dto, p)
-	return json.Marshal(dto)
-}
-
-func (p *Pool) UnmarshalJSON(b []byte) error {
-	var dto poolDTO
-	err := json.Unmarshal(b, &dto)
-	if err != nil {
-		return err
-	}
-	return marshal(p, &dto)
+// Pool Members contains a list of pool members within a pool on the BIG-IP system.
+type PoolMembers struct {
+	PoolMembers []PoolMember `json:"items"`
 }
 
 // poolMember is used only when adding members to a pool.
 type poolMember struct {
 	Name string `json:"name"`
+}
+
+// poolMembers is used only when modifying members on a pool.
+type poolMembers struct {
+	Members []PoolMember `json:"members"`
+}
+
+// Pool Member contains information about each individual member in a pool. You can use all
+// of these fields when modifying a pool member.
+type PoolMember struct {
+	Name            string `json:"name,omitempty"`
+	Partition       string `json:"partition,omitempty"`
+	FullPath        string `json:"fullPath,omitempty"`
+	Generation      int    `json:"generation,omitempty"`
+	Address         string `json:"address,omitempty"`
+	ConnectionLimit int    `json:"connectionLimit,omitempty"`
+	DynamicRatio    int    `json:"dynamicRatio,omitempty"`
+	InheritProfile  string `json:"inheritProfile,omitempty"`
+	Logging         string `json:"logging,omitempty"`
+	Monitor         string `json:"monitor,omitempty"`
+	PriorityGroup   int    `json:"priorityGroup,omitempty"`
+	RateLimit       string `json:"rateLimit,omitempty"`
+	Ratio           int    `json:"ratio,omitempty"`
+	Session         string `json:"session,omitempty"`
+	State           string `json:"state,omitempty"`
 }
 
 // VirtualServers contains a list of all virtual servers on the BIG-IP system.
@@ -138,15 +310,19 @@ type VirtualServer struct {
 	Source                   string `json:"source,omitempty"`
 	SourceAddressTranslation struct {
 		Type string `json:"type,omitempty"`
+		Pool string `json:"pool,omitempty"`
 	} `json:"sourceAddressTranslation,omitempty"`
 	SourcePort       string    `json:"sourcePort,omitempty"`
 	SYNCookieStatus  string    `json:"synCookieStatus,omitempty"`
 	TranslateAddress string    `json:"translateAddress,omitempty"`
 	TranslatePort    string    `json:"translatePort,omitempty"`
+	VlansEnabled     bool      `json:"vlansEnabled,omitempty"`
 	VlansDisabled    bool      `json:"vlansDisabled,omitempty"`
 	VSIndex          int       `json:"vsIndex,omitempty"`
+	Vlans            []string  `json:"vlans,omitempty"`
 	Rules            []string  `json:"rules,omitempty"`
 	Profiles         []Profile `json:"profiles,omitempty"`
+	Policies         []string  `json:"policies,omitempty"`
 }
 
 // VirtualAddresses contains a list of all virtual addresses on the BIG-IP system.
@@ -162,7 +338,7 @@ type VirtualAddress struct {
 	Generation            int
 	Address               string
 	ARP                   bool
-	AutoDelete            string
+	AutoDelete            bool
 	ConnectionLimit       int
 	Enabled               bool
 	Floating              bool
@@ -182,7 +358,7 @@ type virtualAddressDTO struct {
 	Generation            int    `json:"generation,omitempty"`
 	Address               string `json:"address,omitempty"`
 	ARP                   string `json:"arp,omitempty" bool:"enabled"`
-	AutoDelete            string `json:"autoDelete,omitempty"`
+	AutoDelete            string `json:"autoDelete,omitempty" bool:"true"`
 	ConnectionLimit       int    `json:"connectionLimit,omitempty"`
 	Enabled               string `json:"enabled,omitempty" bool:"yes"`
 	Floating              string `json:"floating,omitempty" bool:"enabled"`
@@ -199,9 +375,14 @@ type Policies struct {
 	Policies []Policy `json:"items"`
 }
 
+type VirtualServerPolicies struct {
+	PolicyRef Policies `json:"policiesReference"`
+}
+
 type Policy struct {
 	Name      string
 	Partition string
+	FullPath  string
 	Controls  []string
 	Requires  []string
 	Strategy  string
@@ -214,6 +395,7 @@ type policyDTO struct {
 	Controls  []string `json:"controls,omitempty"`
 	Requires  []string `json:"requires,omitempty"`
 	Strategy  string   `json:"strategy,omitempty"`
+	FullPath  string   `json:"fullPath,omitempty"`
 	Rules     struct {
 		Items []PolicyRule `json:"items,omitempty"`
 	} `json:"rulesReference,omitempty"`
@@ -226,6 +408,7 @@ func (p *Policy) MarshalJSON() ([]byte, error) {
 		Controls:  p.Controls,
 		Requires:  p.Requires,
 		Strategy:  p.Strategy,
+		FullPath:  p.FullPath,
 		Rules: struct {
 			Items []PolicyRule `json:"items,omitempty"`
 		}{Items: p.Rules},
@@ -245,6 +428,7 @@ func (p *Policy) UnmarshalJSON(b []byte) error {
 	p.Requires = dto.Requires
 	p.Strategy = dto.Strategy
 	p.Rules = dto.Rules.Items
+	p.FullPath = dto.FullPath
 
 	return nil
 }
@@ -255,6 +439,7 @@ type PolicyRules struct {
 
 type PolicyRule struct {
 	Name       string
+	FullPath   string
 	Ordinal    int
 	Conditions []PolicyRuleCondition
 	Actions    []PolicyRuleAction
@@ -263,6 +448,7 @@ type PolicyRule struct {
 type policyRuleDTO struct {
 	Name       string `json:"name"`
 	Ordinal    int    `json:"ordinal"`
+	FullPath   string `json:"fullPath,omitempty"`
 	Conditions struct {
 		Items []PolicyRuleCondition `json:"items,omitempty"`
 	} `json:"conditionsReference,omitempty"`
@@ -273,8 +459,9 @@ type policyRuleDTO struct {
 
 func (p *PolicyRule) MarshalJSON() ([]byte, error) {
 	return json.Marshal(policyRuleDTO{
-		Name:    p.Name,
-		Ordinal: p.Ordinal,
+		Name:     p.Name,
+		Ordinal:  p.Ordinal,
+		FullPath: p.FullPath,
 		Conditions: struct {
 			Items []PolicyRuleCondition `json:"items,omitempty"`
 		}{Items: p.Conditions},
@@ -295,6 +482,7 @@ func (p *PolicyRule) UnmarshalJSON(b []byte) error {
 	p.Ordinal = dto.Ordinal
 	p.Actions = dto.Actions.Items
 	p.Conditions = dto.Conditions.Items
+	p.FullPath = dto.FullPath
 
 	return nil
 }
@@ -540,6 +728,7 @@ type Monitor struct {
 	Interval       int
 	IPDSCP         int
 	ManualResume   bool
+	Password       string
 	ReceiveString  string
 	ReceiveDisable string
 	Reverse        bool
@@ -548,6 +737,7 @@ type Monitor struct {
 	Timeout        int
 	Transparent    bool
 	UpInterval     int
+	Username       string
 }
 
 type monitorDTO struct {
@@ -561,6 +751,7 @@ type monitorDTO struct {
 	Interval       int    `json:"interval,omitempty"`
 	IPDSCP         int    `json:"ipDscp,omitempty"`
 	ManualResume   string `json:"manualResume,omitempty" bool:"enabled"`
+	Password       string `json:"password,omitempty"`
 	ReceiveString  string `json:"recv,omitempty"`
 	ReceiveDisable string `json:"recvDisable,omitempty"`
 	Reverse        string `json:"reverse,omitempty" bool:"enabled"`
@@ -569,31 +760,16 @@ type monitorDTO struct {
 	Timeout        int    `json:"timeout,omitempty"`
 	Transparent    string `json:"transparent,omitempty" bool:"enabled"`
 	UpInterval     int    `json:"upInterval,omitempty"`
-}
-
-type Profiles struct {
-	Profiles []Profile `json:"items"`
-}
-
-type Profile struct {
-	Name      string `json:"name,omitempty"`
-	Partition string `json:"partition,omitempty"`
-}
-
-type IRules struct {
-	IRules []IRule `json:"items"`
-}
-
-type IRule struct {
-	Name      string `json:"name,omitempty"`
-	Partition string `json:"partition,omitempty"`
-	Rule      string `json:"apiAnonymous,omitempty"`
+	Username       string `json:"username,omitempty"`
 }
 
 func (p *Monitor) MarshalJSON() ([]byte, error) {
 	var dto monitorDTO
 	marshal(&dto, p)
-	return json.Marshal(dto)
+	if strings.Contains(dto.SendString, "\r\n") {
+		dto.SendString = strings.Replace(dto.SendString, "\r\n", "\\r\\n", -1)
+	}
+	return jsonMarshal(dto)
 }
 
 func (p *Monitor) UnmarshalJSON(b []byte) error {
@@ -605,65 +781,245 @@ func (p *Monitor) UnmarshalJSON(b []byte) error {
 	return marshal(p, &dto)
 }
 
-var (
-	uriNode           = "ltm/node"
-	uriPool           = "ltm/pool"
-	uriVirtual        = "ltm/virtual"
-	uriVirtualAddress = "ltm/virtual-address"
-	uriMonitor        = "ltm/monitor"
-	uriIRule          = "ltm/rule"
-	uriPolicy         = "ltm/policy"
-	cidr              = map[string]string{
-		"0":  "0.0.0.0",
-		"1":  "128.0.0.0",
-		"2":  "192.0.0.0",
-		"3":  "224.0.0.0",
-		"4":  "240.0.0.0",
-		"5":  "248.0.0.0",
-		"6":  "252.0.0.0",
-		"7":  "254.0.0.0",
-		"8":  "255.0.0.0",
-		"9":  "255.128.0.0",
-		"10": "255.192.0.0",
-		"11": "255.224.0.0",
-		"12": "255.240.0.0",
-		"13": "255.248.0.0",
-		"14": "255.252.0.0",
-		"15": "255.254.0.0",
-		"16": "255.255.0.0",
-		"17": "255.255.128.0",
-		"18": "255.255.192.0",
-		"19": "255.255.224.0",
-		"20": "255.255.240.0",
-		"21": "255.255.248.0",
-		"22": "255.255.252.0",
-		"23": "255.255.254.0",
-		"24": "255.255.255.0",
-		"25": "255.255.255.128",
-		"26": "255.255.255.192",
-		"27": "255.255.255.224",
-		"28": "255.255.255.240",
-		"29": "255.255.255.248",
-		"30": "255.255.255.252",
-		"31": "255.255.255.254",
-		"32": "255.255.255.255",
-	}
+type Profiles struct {
+	Profiles []Profile `json:"items"`
+}
+
+type Profile struct {
+	Name      string `json:"name,omitempty"`
+	FullPath  string `json:"fullPath,omitempty"`
+	Partition string `json:"partition,omitempty"`
+	Context   string `json:"context,omitempty"`
+}
+
+type IRules struct {
+	IRules []IRule `json:"items"`
+}
+
+type IRule struct {
+	Name      string `json:"name,omitempty"`
+	Partition string `json:"partition,omitempty"`
+	FullPath  string `json:"fullPath,omitempty"`
+	Rule      string `json:"apiAnonymous,omitempty"`
+}
+
+const (
+	uriLtm            = "ltm"
+	uriNode           = "node"
+	uriPool           = "pool"
+	uriPoolMember     = "members"
+	uriProfile        = "profile"
+	uriServerSSL      = "server-ssl"
+	uriClientSSL      = "client-ssl"
+	uriVirtual        = "virtual"
+	uriVirtualAddress = "virtual-address"
+	uriSnatPool       = "snatpool"
+	uriMonitor        = "monitor"
+	uriIRule          = "rule"
+	uriPolicy         = "policy"
+	uriDatagroup      = "data-group"
+	uriInternal       = "internal"
+	ENABLED           = "enable"
+	DISABLED          = "disable"
+	CONTEXT_SERVER    = "serverside"
+	CONTEXT_CLIENT    = "clientside"
+	CONTEXT_ALL       = "all"
 )
 
-// Nodes returns a list of nodes.
-func (b *BigIP) Nodes() (*Nodes, error) {
-	var nodes Nodes
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriNode,
-	}
+var cidr = map[string]string{
+	"0":  "0.0.0.0",
+	"1":  "128.0.0.0",
+	"2":  "192.0.0.0",
+	"3":  "224.0.0.0",
+	"4":  "240.0.0.0",
+	"5":  "248.0.0.0",
+	"6":  "252.0.0.0",
+	"7":  "254.0.0.0",
+	"8":  "255.0.0.0",
+	"9":  "255.128.0.0",
+	"10": "255.192.0.0",
+	"11": "255.224.0.0",
+	"12": "255.240.0.0",
+	"13": "255.248.0.0",
+	"14": "255.252.0.0",
+	"15": "255.254.0.0",
+	"16": "255.255.0.0",
+	"17": "255.255.128.0",
+	"18": "255.255.192.0",
+	"19": "255.255.224.0",
+	"20": "255.255.240.0",
+	"21": "255.255.248.0",
+	"22": "255.255.252.0",
+	"23": "255.255.254.0",
+	"24": "255.255.255.0",
+	"25": "255.255.255.128",
+	"26": "255.255.255.192",
+	"27": "255.255.255.224",
+	"28": "255.255.255.240",
+	"29": "255.255.255.248",
+	"30": "255.255.255.252",
+	"31": "255.255.255.254",
+	"32": "255.255.255.255",
+}
 
-	resp, err := b.APICall(req)
+// SnatPools returns a list of snatpools.
+func (b *BigIP) SnatPools() (*SnatPools, error) {
+	var snatPools SnatPools
+	err, _ := b.getForEntity(&snatPools, uriLtm, uriSnatPool)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal(resp, &nodes)
+	return &snatPools, nil
+}
+
+// CreateSnatPool adds a new snatpool to the BIG-IP system.
+func (b *BigIP) CreateSnatPool(name string, members []string) error {
+	config := &SnatPool{
+		Name:    name,
+		Members: members,
+	}
+
+	return b.post(config, uriLtm, uriSnatPool)
+}
+
+// AddSnatPool adds a new snatpool by config to the BIG-IP system.
+func (b *BigIP) AddSnatPool(config *SnatPool) error {
+
+	return b.post(config, uriLtm, uriSnatPool)
+}
+
+// GetSnatPool retrieves a SnatPool by name. Returns nil if the snatpool does not exist
+func (b *BigIP) GetSnatPool(name string) (*SnatPool, error) {
+	var snatPool SnatPool
+	err, ok := b.getForEntity(&snatPool, uriLtm, uriSnatPool, name)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
+	}
+
+	return &snatPool, nil
+}
+
+// DeleteSnatPool removes a snatpool.
+func (b *BigIP) DeleteSnatPool(name string) error {
+	return b.delete(uriLtm, uriSnatPool, name)
+}
+
+// ModifySnatPool allows you to change any attribute of a snatpool. Fields that
+// can be modified are referenced in the Snatpool struct.
+func (b *BigIP) ModifySnatPool(name string, config *SnatPool) error {
+	return b.put(config, uriLtm, uriSnatPool, name)
+}
+
+// ServerSSLProfiles returns a list of server-ssl profiles.
+func (b *BigIP) ServerSSLProfiles() (*ServerSSLProfiles, error) {
+	var serverSSLProfiles ServerSSLProfiles
+	err, _ := b.getForEntity(&serverSSLProfiles, uriLtm, uriProfile, uriServerSSL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &serverSSLProfiles, nil
+}
+
+// GetServerSSLProfile gets a server-ssl profile by name. Returns nil if the server-ssl profile does not exist
+func (b *BigIP) GetServerSSLProfile(name string) (*ServerSSLProfile, error) {
+	var serverSSLProfile ServerSSLProfile
+	err, ok := b.getForEntity(&serverSSLProfile, uriLtm, uriProfile, uriServerSSL, name)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
+	}
+
+	return &serverSSLProfile, nil
+}
+
+// CreateServerSSLProfile creates a new server-ssl profile on the BIG-IP system.
+func (b *BigIP) CreateServerSSLProfile(name string, parent string) error {
+	config := &ServerSSLProfile{
+		Name:         name,
+		DefaultsFrom: parent,
+	}
+
+	return b.post(config, uriLtm, uriProfile, uriServerSSL)
+}
+
+// AddServerSSLProfile adds a new server-ssl profile on the BIG-IP system.
+func (b *BigIP) AddServerSSLProfile(config *ServerSSLProfile) error {
+	return b.post(config, uriLtm, uriProfile, uriServerSSL)
+}
+
+// DeleteServerSSLProfile removes a server-ssl profile.
+func (b *BigIP) DeleteServerSSLProfile(name string) error {
+	return b.delete(uriLtm, uriProfile, uriServerSSL, name)
+}
+
+// ModifyServerSSLProfile allows you to change any attribute of a sever-ssl profile.
+// Fields that can be modified are referenced in the VirtualServer struct.
+func (b *BigIP) ModifyServerSSLProfile(name string, config *ServerSSLProfile) error {
+	return b.put(config, uriLtm, uriProfile, uriServerSSL, name)
+}
+
+// ClientSSLProfiles returns a list of client-ssl profiles.
+func (b *BigIP) ClientSSLProfiles() (*ClientSSLProfiles, error) {
+	var clientSSLProfiles ClientSSLProfiles
+	err, _ := b.getForEntity(&clientSSLProfiles, uriLtm, uriProfile, uriClientSSL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clientSSLProfiles, nil
+}
+
+// GetClientSSLProfile gets a client-ssl profile by name. Returns nil if the client-ssl profile does not exist
+func (b *BigIP) GetClientSSLProfile(name string) (*ClientSSLProfile, error) {
+	var clientSSLProfile ClientSSLProfile
+	err, ok := b.getForEntity(&clientSSLProfile, uriLtm, uriProfile, uriClientSSL, name)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
+	}
+
+	return &clientSSLProfile, nil
+}
+
+// CreateClientSSLProfile creates a new client-ssl profile on the BIG-IP system.
+func (b *BigIP) CreateClientSSLProfile(name string, parent string) error {
+	config := &ClientSSLProfile{
+		Name:         name,
+		DefaultsFrom: parent,
+	}
+
+	return b.post(config, uriLtm, uriProfile, uriClientSSL)
+}
+
+// AddClientSSLProfile adds a new client-ssl profile on the BIG-IP system.
+func (b *BigIP) AddClientSSLProfile(config *ClientSSLProfile) error {
+	return b.post(config, uriLtm, uriProfile, uriClientSSL)
+}
+
+// DeleteClientSSLProfile removes a client-ssl profile.
+func (b *BigIP) DeleteClientSSLProfile(name string) error {
+	return b.delete(uriLtm, uriProfile, uriClientSSL, name)
+}
+
+// ModifyClientSSLProfile allows you to change any attribute of a client-ssl profile.
+// Fields that can be modified are referenced in the ClientSSLProfile struct.
+func (b *BigIP) ModifyClientSSLProfile(name string, config *ClientSSLProfile) error {
+	return b.put(config, uriLtm, uriProfile, uriClientSSL, name)
+}
+
+// Nodes returns a list of nodes.
+func (b *BigIP) Nodes() (*Nodes, error) {
+	var nodes Nodes
+	err, _ := b.getForEntity(&nodes, uriLtm, uriNode)
 	if err != nil {
 		return nil, err
 	}
@@ -678,36 +1034,18 @@ func (b *BigIP) CreateNode(name, address string) error {
 		Address: address,
 	}
 
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "post",
-		URL:         uriNode,
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.post(config, uriLtm, uriNode)
 }
 
 // Get a Node by name. Returns nil if the node does not exist
 func (b *BigIP) GetNode(name string) (*Node, error) {
-	resp, err := b.SafeGet(fmt.Sprintf("%s/%s", uriNode, name))
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-
 	var node Node
-	err = json.Unmarshal(resp, &node)
+	err, ok := b.getForEntity(&node, uriLtm, uriNode, name)
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
 	return &node, nil
@@ -715,26 +1053,13 @@ func (b *BigIP) GetNode(name string) (*Node, error) {
 
 // DeleteNode removes a node.
 func (b *BigIP) DeleteNode(name string) error {
-	return b.delete(uriNode, name)
+	return b.delete(uriLtm, uriNode, name)
 }
 
 // ModifyNode allows you to change any attribute of a node. Fields that
 // can be modified are referenced in the Node struct.
 func (b *BigIP) ModifyNode(name string, config *Node) error {
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriNode, name),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriNode, name)
 }
 
 // NodeStatus changes the status of a node. <state> can be either
@@ -754,36 +1079,51 @@ func (b *BigIP) NodeStatus(name, state string) error {
 		// 	config.Session = "user-disabled"
 	}
 
-	marshalJSON, err := json.Marshal(config)
+	return b.put(config, uriLtm, uriNode, name)
+}
+
+// InternalDataGroups returns a list of internal data groups.
+func (b *BigIP) InternalDataGroups() (*DataGroups, error) {
+	var dataGroups DataGroups
+	err, _ := b.getForEntity(&dataGroups, uriLtm, uriDatagroup, uriInternal)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriNode, name),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
+	return &dataGroups, nil
+}
+
+func (b *BigIP) AddInternalDataGroup(config *DataGroup) error {
+	return b.post(config, uriLtm, uriDatagroup, uriInternal)
+}
+
+func (b *BigIP) DeleteInternalDataGroup(name string) error {
+	return b.delete(uriLtm, uriDatagroup, uriInternal, name)
+}
+
+// Modify a named internal data group, REPLACING all the records
+func (b *BigIP) ModifyInternalDataGroupRecords(name string, records *[]DataGroupRecord) error {
+	config := &DataGroup{
+		Records: *records,
+	}
+	return b.put(config, uriLtm, uriDatagroup, uriInternal, name)
+}
+
+// Get the internal data group records for a named internal data group
+func (b *BigIP) GetInternalDataGroupRecords(name string) (*[]DataGroupRecord, error) {
+	var dataGroupRecords []DataGroupRecord
+	err, _ := b.getForEntity(&dataGroupRecords, uriLtm, uriDatagroup, uriInternal, name)
+	if err != nil {
+		return nil, err
 	}
 
-	_, callErr := b.APICall(req)
-	return callErr
+	return &dataGroupRecords, nil
 }
 
 // Pools returns a list of pools.
 func (b *BigIP) Pools() (*Pools, error) {
 	var pools Pools
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriPool,
-	}
-
-	resp, err := b.APICall(req)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(resp, &pools)
+	err, _ := b.getForEntity(&pools, uriLtm, uriPool)
 	if err != nil {
 		return nil, err
 	}
@@ -792,30 +1132,14 @@ func (b *BigIP) Pools() (*Pools, error) {
 }
 
 // PoolMembers returns a list of pool members for the given pool.
-func (b *BigIP) PoolMembers(name string) ([]string, error) {
-	var nodes Nodes
-	members := []string{}
-	errString := []string{}
-	req := &APIRequest{
-		Method: "get",
-		URL:    fmt.Sprintf("%s/%s/members", uriPool, name),
-	}
-
-	resp, err := b.APICall(req)
+func (b *BigIP) PoolMembers(name string) (*PoolMembers, error) {
+	var poolMembers PoolMembers
+	err, _ := b.getForEntity(&poolMembers, uriLtm, uriPool, name, uriPoolMember)
 	if err != nil {
-		return errString, err
+		return nil, err
 	}
 
-	err = json.Unmarshal(resp, &nodes)
-	if err != nil {
-		return errString, err
-	}
-
-	for _, m := range nodes.Nodes {
-		members = append(members, m.Name)
-	}
-
-	return members, nil
+	return &poolMembers, nil
 }
 
 // AddPoolMember adds a node/member to the given pool. <member> must be in the form
@@ -825,32 +1149,67 @@ func (b *BigIP) AddPoolMember(pool, member string) error {
 		Name: member,
 	}
 
-	marshalJSON, err := json.Marshal(config)
+	return b.post(config, uriLtm, uriPool, pool, uriPoolMember)
+}
+
+// GetPoolMember returns the details of a member in the specified pool.
+func (b *BigIP) GetPoolMember(pool string, member string) (*PoolMember, error) {
+	var poolMember PoolMember
+	err, ok := b.getForEntity(&poolMember, uriLtm, uriPool, pool, uriPoolMember, member)
+
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
-	req := &APIRequest{
-		Method:      "post",
-		URL:         fmt.Sprintf("%s/%s/members", uriPool, pool),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
+	return &poolMember, nil
+}
 
-	_, callErr := b.APICall(req)
-	return callErr
+// CreatePoolMember creates a pool member for the specified pool.
+func (b *BigIP) CreatePoolMember(pool string, config *PoolMember) error {
+	return b.post(config, uriLtm, uriPool, pool, uriPoolMember)
+}
+
+// ModifyPoolMember will update the configuration of a particular pool member.
+func (b *BigIP) ModifyPoolMember(pool string, config *PoolMember) error {
+	member := config.FullPath
+	// These fields are not used when modifying a pool member; so omit them.
+	config.Name = ""
+	config.Partition = ""
+	config.FullPath = ""
+
+	// This cannot be modified for an existing pool member.
+	config.Address = ""
+
+	return b.put(config, uriLtm, uriPool, pool, uriPoolMember, member)
+}
+
+// UpdatePoolMembers does a replace-all-with for the members of a pool.
+func (b *BigIP) UpdatePoolMembers(pool string, pm *[]PoolMember) error {
+	config := &poolMembers{
+		Members: *pm,
+	}
+	return b.put(config, uriLtm, uriPool, pool)
+}
+
+// RemovePoolMember removes a pool member from the specified pool.
+func (b *BigIP) RemovePoolMember(pool string, config *PoolMember) error {
+	member := config.FullPath
+	return b.delete(uriLtm, uriPool, pool, uriPoolMember, member)
 }
 
 // DeletePoolMember removes a member from the given pool. <member> must be in the form
 // of <node>:<port>, i.e.: "web-server1:443".
-func (b *BigIP) DeletePoolMember(pool, member string) error {
-	return b.delete(uriPool, pool, "members", member)
+func (b *BigIP) DeletePoolMember(pool string, member string) error {
+	return b.delete(uriLtm, uriPool, pool, uriPoolMember, member)
 }
 
 // PoolMemberStatus changes the status of a pool member. <state> can be either
 // "enable" or "disable". <member> must be in the form of <node>:<port>,
 // i.e.: "web-server1:443".
-func (b *BigIP) PoolMemberStatus(pool, member, state string) error {
+func (b *BigIP) PoolMemberStatus(pool string, member string, state string) error {
 	config := &Node{}
 
 	switch state {
@@ -865,58 +1224,32 @@ func (b *BigIP) PoolMemberStatus(pool, member, state string) error {
 		// 	config.Session = "user-disabled"
 	}
 
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s/members/%s", uriPool, pool, member),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriPool, pool, uriPoolMember, member)
 }
 
-// CreatePool adds a new pool to the BIG-IP system.
+// CreatePool adds a new pool to the BIG-IP system by name.
 func (b *BigIP) CreatePool(name string) error {
 	config := &Pool{
 		Name: name,
 	}
 
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
+	return b.post(config, uriLtm, uriPool)
+}
 
-	req := &APIRequest{
-		Method:      "post",
-		URL:         uriPool,
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+// AddPool creates a new pool on the BIG-IP system.
+func (b *BigIP) AddPool(config *Pool) error {
+	return b.post(config, uriLtm, uriPool)
 }
 
 // Get a Pool by name. Returns nil if the Pool does not exist
 func (b *BigIP) GetPool(name string) (*Pool, error) {
-	resp, err := b.SafeGet(fmt.Sprintf("%s/%s", uriPool, name))
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-
 	var pool Pool
-	err = json.Unmarshal(resp, &pool)
+	err, ok := b.getForEntity(&pool, uriLtm, uriPool, name)
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
 	return &pool, nil
@@ -924,42 +1257,19 @@ func (b *BigIP) GetPool(name string) (*Pool, error) {
 
 // DeletePool removes a pool.
 func (b *BigIP) DeletePool(name string) error {
-	return b.delete(uriPool, name)
+	return b.delete(uriLtm, uriPool, name)
 }
 
 // ModifyPool allows you to change any attribute of a pool. Fields that
 // can be modified are referenced in the Pool struct.
 func (b *BigIP) ModifyPool(name string, config *Pool) error {
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriPool, name),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriPool, name)
 }
 
 // VirtualServers returns a list of virtual servers.
 func (b *BigIP) VirtualServers() (*VirtualServers, error) {
 	var vs VirtualServers
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriVirtual,
-	}
-
-	resp, err := b.APICall(req)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(resp, &vs)
+	err, _ := b.getForEntity(&vs, uriLtm, uriVirtual)
 	if err != nil {
 		return nil, err
 	}
@@ -984,180 +1294,123 @@ func (b *BigIP) CreateVirtualServer(name, destination, mask, pool string, port i
 		Pool:        pool,
 	}
 
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "post",
-		URL:         uriVirtual,
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.post(config, uriLtm, uriVirtual)
 }
 
-// Get a VirtualServer by name. Returns nil if the VirtualServer does not exist
-func (b *BigIP) GetVirtualServer(name string) (*VirtualServer, error) {
-	resp, err := b.SafeGet(fmt.Sprintf("%s/%s", uriVirtual, name))
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
+// AddVirtualServer adds a new virtual server by config to the BIG-IP system.
+func (b *BigIP) AddVirtualServer(config *VirtualServer) error {
+	return b.post(config, uriLtm, uriVirtual)
+}
 
+// GetVirtualServer retrieves a virtual server by name. Returns nil if the virtual server does not exist
+func (b *BigIP) GetVirtualServer(name string) (*VirtualServer, error) {
 	var vs VirtualServer
-	err = json.Unmarshal(resp, &vs)
+	err, ok := b.getForEntity(&vs, uriLtm, uriVirtual, name)
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
 	profiles, err := b.VirtualServerProfiles(name)
 	if err != nil {
 		return nil, err
 	}
-
 	vs.Profiles = profiles.Profiles
+
+	policy_names, err := b.VirtualServerPolicyNames(name)
+	if err != nil {
+		return nil, err
+	}
+	vs.Policies = policy_names
+
 	return &vs, nil
 }
 
 // DeleteVirtualServer removes a virtual server.
 func (b *BigIP) DeleteVirtualServer(name string) error {
-	return b.delete(uriVirtual, name)
+	return b.delete(uriLtm, uriVirtual, name)
 }
 
 // ModifyVirtualServer allows you to change any attribute of a virtual server. Fields that
 // can be modified are referenced in the VirtualServer struct.
 func (b *BigIP) ModifyVirtualServer(name string, config *VirtualServer) error {
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriVirtual, name),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriVirtual, name)
 }
 
 // VirtualServerProfiles gets the profiles currently associated with a virtual server.
 func (b *BigIP) VirtualServerProfiles(vs string) (*Profiles, error) {
-	resp, err := b.SafeGet(fmt.Sprintf("%s/%s/profiles", uriVirtual, vs))
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-
 	var p Profiles
-	err = json.Unmarshal(resp, &p)
+	err, ok := b.getForEntity(&p, uriLtm, uriVirtual, vs, "profiles")
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
 	return &p, nil
 }
 
+//Get the names of policies associated with a particular virtual server
+func (b *BigIP) VirtualServerPolicyNames(vs string) ([]string, error) {
+	var policies VirtualServerPolicies
+	err, _ := b.getForEntity(&policies, uriLtm, uriVirtual, vs, "policies")
+	if err != nil {
+		return nil, err
+	}
+	retval := make([]string, 0, len(policies.PolicyRef.Policies))
+	for _, p := range policies.PolicyRef.Policies {
+		retval = append(retval, p.FullPath)
+	}
+	return retval, nil
+}
+
 // VirtualAddresses returns a list of virtual addresses.
 func (b *BigIP) VirtualAddresses() (*VirtualAddresses, error) {
 	var va VirtualAddresses
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriVirtualAddress,
-	}
-
-	resp, err := b.APICall(req)
+	err, _ := b.getForEntity(&va, uriLtm, uriVirtualAddress)
 	if err != nil {
 		return nil, err
 	}
-
-	err = json.Unmarshal(resp, &va)
-	if err != nil {
-		return nil, err
-	}
-
 	return &va, nil
+}
+
+func (b *BigIP) CreateVirtualAddress(vaddr string, config *VirtualAddress) error {
+	config.Name = vaddr
+	return b.post(config, uriLtm, uriVirtualAddress)
 }
 
 // VirtualAddressStatus changes the status of a virtual address. <state> can be either
 // "enable" or "disable".
 func (b *BigIP) VirtualAddressStatus(vaddr, state string) error {
 	config := &VirtualAddress{}
-
-	switch state {
-	case "enable":
-		config.Enabled = true
-	case "disable":
-		config.Enabled = false
-	}
-
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriVirtualAddress, vaddr),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	config.Enabled = (state == ENABLED)
+	return b.put(config, uriLtm, uriVirtualAddress, vaddr)
 }
 
 // ModifyVirtualAddress allows you to change any attribute of a virtual address. Fields that
 // can be modified are referenced in the VirtualAddress struct.
 func (b *BigIP) ModifyVirtualAddress(vaddr string, config *VirtualAddress) error {
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriVirtualAddress, vaddr),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriVirtualAddress, vaddr)
 }
 
-// Monitors returns a list of all HTTP, HTTPS, Gateway ICMP, and ICMP monitors.
+func (b *BigIP) DeleteVirtualAddress(vaddr string) error {
+	return b.delete(uriLtm, uriVirtualAddress, vaddr)
+}
+
+// Monitors returns a list of all HTTP, HTTPS, Gateway ICMP, ICMP, and TCP monitors.
 func (b *BigIP) Monitors() ([]Monitor, error) {
 	var monitors []Monitor
-	monitorUris := []string{"http", "https", "icmp", "gateway-icmp"}
+	monitorUris := []string{"http", "https", "icmp", "gateway-icmp", "tcp"}
 
 	for _, name := range monitorUris {
 		var m Monitors
-		req := &APIRequest{
-			Method: "get",
-			URL:    fmt.Sprintf("%s/%s", uriMonitor, name),
-		}
-
-		resp, err := b.APICall(req)
+		err, _ := b.getForEntity(&m, uriLtm, uriMonitor, name)
 		if err != nil {
 			return nil, err
 		}
-
-		err = json.Unmarshal(resp, &m)
-		if err != nil {
-			return nil, err
-		}
-
 		for _, monitor := range m.Monitors {
 			monitors = append(monitors, monitor)
 		}
@@ -1167,16 +1420,8 @@ func (b *BigIP) Monitors() ([]Monitor, error) {
 }
 
 // CreateMonitor adds a new monitor to the BIG-IP system. <parent> must be one of "http", "https",
-// "icmp", or "gateway icmp".
+// "icmp", "gateway icmp", or "tcp".
 func (b *BigIP) CreateMonitor(name, parent string, interval, timeout int, send, receive string) error {
-	if strings.Contains(send, "\r\n") {
-		send = strings.Replace(send, "\r\n", "\\r\\n", -1)
-	}
-
-	if strings.Contains(parent, "gateway") {
-		parent = "gateway_icmp"
-	}
-
 	config := &Monitor{
 		Name:          name,
 		ParentMonitor: parent,
@@ -1186,53 +1431,47 @@ func (b *BigIP) CreateMonitor(name, parent string, interval, timeout int, send, 
 		ReceiveString: receive,
 	}
 
-	marshalJSON, err := json.Marshal(config)
+	return b.AddMonitor(config)
+}
+
+// Create a monitor by supplying a config
+func (b *BigIP) AddMonitor(config *Monitor) error {
+	if strings.Contains(config.ParentMonitor, "gateway") {
+		config.ParentMonitor = "gateway_icmp"
+	}
+
+	return b.post(config, uriLtm, uriMonitor, config.ParentMonitor)
+}
+
+// GetVirtualServer retrieves a monitor by name. Returns nil if the monitor does not exist
+func (b *BigIP) GetMonitor(name string, parent string) (*Monitor, error) {
+	// Add a verification that type is an accepted monitor type
+	var monitor Monitor
+	err, ok := b.getForEntity(&monitor, uriLtm, uriMonitor, parent, name)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
 	}
 
-	req := &APIRequest{
-		Method:      "post",
-		URL:         fmt.Sprintf("%s/%s", uriMonitor, parent),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return &monitor, nil
 }
 
 // DeleteMonitor removes a monitor.
 func (b *BigIP) DeleteMonitor(name, parent string) error {
-	return b.delete(uriMonitor, parent, name)
+	return b.delete(uriLtm, uriMonitor, parent, name)
 }
 
 // ModifyMonitor allows you to change any attribute of a monitor. <parent> must be
-// one of "http", "https", "icmp", or "gateway icmp". Fields that
+// one of "http", "https", "icmp", "gateway icmp", or "tcp". Fields that
 // can be modified are referenced in the Monitor struct.
 func (b *BigIP) ModifyMonitor(name, parent string, config *Monitor) error {
-	if strings.Contains(config.SendString, "\r\n") {
-		config.SendString = strings.Replace(config.SendString, "\r\n", "\\r\\n", -1)
+	if strings.Contains(config.ParentMonitor, "gateway") {
+		config.ParentMonitor = "gateway_icmp"
 	}
 
-	if strings.Contains(parent, "gateway") {
-		parent = "gateway_icmp"
-	}
-
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s/%s", uriMonitor, parent, name),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriMonitor, parent, name)
 }
 
 // AddMonitorToPool assigns the monitor, <monitor> to the given <pool>.
@@ -1241,36 +1480,13 @@ func (b *BigIP) AddMonitorToPool(monitor, pool string) error {
 		Monitor: monitor,
 	}
 
-	marshalJSON, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "put",
-		URL:         fmt.Sprintf("%s/%s", uriPool, pool),
-		Body:        string(marshalJSON),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.put(config, uriLtm, uriPool, pool)
 }
 
 // IRules returns a list of irules
 func (b *BigIP) IRules() (*IRules, error) {
 	var rules IRules
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriIRule,
-	}
-
-	resp, err := b.APICall(req)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(resp, &rules)
+	err, _ := b.getForEntity(&rules, uriLtm, uriIRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1281,21 +1497,13 @@ func (b *BigIP) IRules() (*IRules, error) {
 // IRule returns information about the given iRule.
 func (b *BigIP) IRule(name string) (*IRule, error) {
 	var rule IRule
-	req := &APIRequest{
-		Method: "get",
-		URL:    fmt.Sprintf("%s/%s", uriIRule, name),
-	}
-
-	resp, err := b.APICall(req)
+	err, ok := b.getForEntity(&rule, uriLtm, uriIRule, name)
 	if err != nil {
 		return nil, err
 	}
-
-	err = json.Unmarshal(resp, &rule)
-	if err != nil {
-		return nil, err
+	if !ok {
+		return nil, nil
 	}
-
 	return &rule, nil
 }
 
@@ -1305,33 +1513,23 @@ func (b *BigIP) CreateIRule(name, rule string) error {
 		Name: name,
 		Rule: rule,
 	}
-	return b.post(irule, uriIRule)
+	return b.post(irule, uriLtm, uriIRule)
 }
 
 // DeleteIRule removes an iRule from the system.
 func (b *BigIP) DeleteIRule(name string) error {
-	return b.delete(uriIRule, name)
+	return b.delete(uriLtm, uriIRule, name)
 }
 
 // ModifyIRule updates the given iRule with any changed values.
 func (b *BigIP) ModifyIRule(name string, irule *IRule) error {
 	irule.Name = name
-	return b.put(irule, uriIRule, name)
+	return b.put(irule, uriLtm, uriIRule, name)
 }
 
 func (b *BigIP) Policies() (*Policies, error) {
 	var p Policies
-	req := &APIRequest{
-		Method: "get",
-		URL:    uriPolicy,
-	}
-
-	resp, err := b.APICall(req)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(resp, &p)
+	err, _ := b.getForEntity(&p, uriLtm, uriPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -1342,13 +1540,16 @@ func (b *BigIP) Policies() (*Policies, error) {
 //Load a fully policy definition. Policies seem to be best dealt with as one big entity.
 func (b *BigIP) GetPolicy(name string) (*Policy, error) {
 	var p Policy
-	err := b.getForEntity(&p, uriPolicy, name)
+	err, ok := b.getForEntity(&p, uriLtm, uriPolicy, name)
 	if err != nil {
 		return nil, err
 	}
+	if !ok {
+		return nil, nil
+	}
 
 	var rules PolicyRules
-	err = b.getForEntity(&rules, uriPolicy, name, "rules")
+	err, _ = b.getForEntity(&rules, uriLtm, uriPolicy, name, "rules")
 	if err != nil {
 		return nil, err
 	}
@@ -1358,11 +1559,11 @@ func (b *BigIP) GetPolicy(name string) (*Policy, error) {
 		var a PolicyRuleActions
 		var c PolicyRuleConditions
 
-		err = b.getForEntity(&a, uriPolicy, name, "rules", p.Rules[i].Name, "actions")
+		err, _ = b.getForEntity(&a, uriLtm, uriPolicy, name, "rules", p.Rules[i].Name, "actions")
 		if err != nil {
 			return nil, err
 		}
-		err = b.getForEntity(&c, uriPolicy, name, "rules", p.Rules[i].Name, "conditions")
+		err, _ = b.getForEntity(&c, uriLtm, uriPolicy, name, "rules", p.Rules[i].Name, "conditions")
 		if err != nil {
 			return nil, err
 		}
@@ -1389,15 +1590,16 @@ func normalizePolicy(p *Policy) {
 //Create a new policy. It is not necessary to set the Ordinal fields on subcollections.
 func (b *BigIP) CreatePolicy(p *Policy) error {
 	normalizePolicy(p)
-	return b.post(p, uriPolicy)
+	return b.post(p, uriLtm, uriPolicy)
 }
 
 //Update an existing policy.
 func (b *BigIP) UpdatePolicy(name string, p *Policy) error {
 	normalizePolicy(p)
-	return b.put(p, uriPolicy, name)
+	return b.put(p, uriLtm, uriPolicy, name)
 }
 
+//Delete a policy by name.
 func (b *BigIP) DeletePolicy(name string) error {
-	return b.delete(uriPolicy, name)
+	return b.delete(uriLtm, uriPolicy, name)
 }
