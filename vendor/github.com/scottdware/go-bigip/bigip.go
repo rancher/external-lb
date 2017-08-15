@@ -11,15 +11,25 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 )
+
+var defaultConfigOptions = &ConfigOptions{
+	APICallTimeout: 60 * time.Second,
+}
+
+type ConfigOptions struct {
+	APICallTimeout time.Duration
+}
 
 // BigIP is a container for our session state.
 type BigIP struct {
-	Host      string
-	User      string
-	Password  string
-	Token     string // if set, will be used instead of User/Password
-	Transport *http.Transport
+	Host          string
+	User          string
+	Password      string
+	Token         string // if set, will be used instead of User/Password
+	Transport     *http.Transport
+	ConfigOptions *ConfigOptions
 }
 
 // APIRequest builds our request before sending it to the server.
@@ -47,12 +57,15 @@ func (r *RequestError) Error() error {
 }
 
 // NewSession sets up our connection to the BIG-IP system.
-func NewSession(host, user, passwd string) *BigIP {
+func NewSession(host, user, passwd string, configOptions *ConfigOptions) *BigIP {
 	var url string
 	if !strings.HasPrefix(host, "http") {
 		url = fmt.Sprintf("https://%s", host)
 	} else {
 		url = host
+	}
+	if configOptions == nil {
+		configOptions = defaultConfigOptions
 	}
 	return &BigIP{
 		Host:     url,
@@ -63,6 +76,7 @@ func NewSession(host, user, passwd string) *BigIP {
 				InsecureSkipVerify: true,
 			},
 		},
+		ConfigOptions: configOptions,
 	}
 }
 
@@ -71,7 +85,7 @@ func NewSession(host, user, passwd string) *BigIP {
 // Auth. This is required when using an external authentication
 // provider, such as Radius or Active Directory. loginProviderName is
 // probably "tmos" but your environment may vary.
-func NewTokenSession(host, user, passwd, loginProviderName string) (b *BigIP, err error) {
+func NewTokenSession(host, user, passwd, loginProviderName string, configOptions *ConfigOptions) (b *BigIP, err error) {
 	type authReq struct {
 		Username          string `json:"username"`
 		Password          string `json:"password"`
@@ -101,7 +115,7 @@ func NewTokenSession(host, user, passwd, loginProviderName string) (b *BigIP, er
 		ContentType: "application/json",
 	}
 
-	b = NewSession(host, user, passwd)
+	b = NewSession(host, user, passwd, configOptions)
 	resp, err := b.APICall(req)
 	if err != nil {
 		return
@@ -131,7 +145,10 @@ func NewTokenSession(host, user, passwd, loginProviderName string) (b *BigIP, er
 // APICall is used to query the BIG-IP web API.
 func (b *BigIP) APICall(options *APIRequest) ([]byte, error) {
 	var req *http.Request
-	client := &http.Client{Transport: b.Transport}
+	client := &http.Client{
+		Transport: b.Transport,
+		Timeout:   b.ConfigOptions.APICallTimeout,
+	}
 	var format string
 	if strings.Contains(options.URL, "mgmt/") {
 		format = "%s/%s"
@@ -147,7 +164,7 @@ func (b *BigIP) APICall(options *APIRequest) ([]byte, error) {
 		req.SetBasicAuth(b.User, b.Password)
 	}
 
-	//fmt.Println("REQ -- ", url," -- ",options.Body)
+	//fmt.Println("REQ -- ", options.Method, " ", url," -- ",options.Body)
 
 	if len(options.ContentType) > 0 {
 		req.Header.Set("Content-Type", options.ContentType)
@@ -173,11 +190,22 @@ func (b *BigIP) APICall(options *APIRequest) ([]byte, error) {
 	return data, nil
 }
 
+func (b *BigIP) iControlPath(parts []string) string {
+	var buffer bytes.Buffer
+	for i, p := range parts {
+		buffer.WriteString(strings.Replace(p, "/", "~", -1))
+		if i < len(parts)-1 {
+			buffer.WriteString("/")
+		}
+	}
+	return buffer.String()
+}
+
 //Generic delete
 func (b *BigIP) delete(path ...string) error {
 	req := &APIRequest{
 		Method: "delete",
-		URL:    strings.Join(path, "/"),
+		URL:    b.iControlPath(path),
 	}
 
 	_, callErr := b.APICall(req)
@@ -185,15 +213,15 @@ func (b *BigIP) delete(path ...string) error {
 }
 
 func (b *BigIP) post(body interface{}, path ...string) error {
-	marshalJSON, err := json.Marshal(body)
+	marshalJSON, err := jsonMarshal(body)
 	if err != nil {
 		return err
 	}
 
 	req := &APIRequest{
 		Method:      "post",
-		URL:         strings.Join(path, "/"),
-		Body:        string(marshalJSON),
+		URL:         b.iControlPath(path),
+		Body:        strings.TrimRight(string(marshalJSON), "\n"),
 		ContentType: "application/json",
 	}
 
@@ -202,15 +230,15 @@ func (b *BigIP) post(body interface{}, path ...string) error {
 }
 
 func (b *BigIP) put(body interface{}, path ...string) error {
-	marshalJSON, err := json.Marshal(body)
+	marshalJSON, err := jsonMarshal(body)
 	if err != nil {
 		return err
 	}
 
 	req := &APIRequest{
 		Method:      "put",
-		URL:         strings.Join(path, "/"),
-		Body:        string(marshalJSON),
+		URL:         b.iControlPath(path),
+		Body:        strings.TrimRight(string(marshalJSON), "\n"),
 		ContentType: "application/json",
 	}
 
@@ -218,23 +246,32 @@ func (b *BigIP) put(body interface{}, path ...string) error {
 	return callErr
 }
 
-func (b *BigIP) getForEntity(e interface{}, path ...string) error {
+//Get a url and populate an entity. If the entity does not exist (404) then the
+//passed entity will be untouched and false will be returned as the second parameter.
+//You can use this to distinguish between a missing entity or an actual error.
+func (b *BigIP) getForEntity(e interface{}, path ...string) (error, bool) {
 	req := &APIRequest{
-		Method: "get",
-		URL:    strings.Join(path, "/"),
+		Method:      "get",
+		URL:         b.iControlPath(path),
+		ContentType: "application/json",
 	}
 
 	resp, err := b.APICall(req)
 	if err != nil {
-		return err
+		var reqError RequestError
+		json.Unmarshal(resp, &reqError)
+		if reqError.Code == 404 {
+			return nil, false
+		}
+		return err, false
 	}
 
 	err = json.Unmarshal(resp, e)
 	if err != nil {
-		return err
+		return err, false
 	}
 
-	return nil
+	return nil, true
 }
 
 // checkError handles any errors we get from our API requests. It returns either the
@@ -259,30 +296,19 @@ func (b *BigIP) checkError(resp []byte) error {
 	return nil
 }
 
-// Perform a GET request and treat 404's as nil objects instead of errors.
-func (b *BigIP) SafeGet(url string) ([]byte, error) {
-	req := &APIRequest{
-		Method:      "get",
-		URL:         url,
-		ContentType: "application/json",
-	}
-
-	resp, err := b.APICall(req)
-	if err != nil {
-		var reqError RequestError
-		json.Unmarshal(resp, &reqError)
-		if reqError.Code == 404 {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return resp, nil
+// jsonMarshal specifies an encoder with 'SetEscapeHTML' set to 'false' so that <, >, and & are not escaped. https://golang.org/pkg/encoding/json/#Marshal
+// https://stackoverflow.com/questions/28595664/how-to-stop-json-marshal-from-escaping-and
+func jsonMarshal(t interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }
 
 // Helper to copy between transfer objects and model objects to hide the myriad of boolean representations
 // in the iControlREST api. DTO fields can be tagged with bool:"yes|enabled|true" to set what true and false
-// marshal to
+// marshal to.
 func marshal(to, from interface{}) error {
 	toVal := reflect.ValueOf(to).Elem()
 	fromVal := reflect.ValueOf(from).Elem()

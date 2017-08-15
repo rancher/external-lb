@@ -41,7 +41,7 @@ func (p *F5BigIPProvider) Init() error {
 	logrus.Debugf("Initializing f5 provider with host: %s, admin: %s, pwd-length: %d",
 		f5_host, f5_admin, len(f5_pwd))
 
-	p.client = bigip.NewSession(f5_host, f5_admin, f5_pwd)
+	p.client = bigip.NewSession(f5_host, f5_admin, f5_pwd, nil)
 
 	if err := p.HealthCheck(); err != nil {
 		return fmt.Errorf("Could not connect to f5 host '%s': %v", f5_host, err)
@@ -102,8 +102,8 @@ func (p *F5BigIPProvider) AddLBConfig(config model.LBConfig) (string, error) {
 			logrus.Errorf("f5 AddLBConfig: Error getting back the pool: %v\n", err)
 			return "", err
 		} else {
-			pool.AllowNAT = true
-			pool.AllowSNAT = true
+			pool.AllowNAT = "yes"
+			pool.AllowSNAT = "yes"
 			err = p.client.ModifyPool(poolName, pool)
 			if err != nil {
 				logrus.Errorf("f5 AddLBConfig: Error modifying the pool: %v\n", err)
@@ -172,9 +172,9 @@ func (p *F5BigIPProvider) poolExists(name string) bool {
 	return false
 }
 
-func poolMemberExists(poolMembers []string, member string) bool {
-	for _, a := range poolMembers {
-		if a == member {
+func poolMemberExists(p *bigip.PoolMembers, member string) bool {
+	for _, a := range p.PoolMembers {
+		if a.Name == member {
 			return true
 		}
 	}
@@ -207,8 +207,8 @@ func (p *F5BigIPProvider) RemoveLBConfig(config model.LBConfig) error {
 	if err != nil {
 		logrus.Errorf("f5 RemoveLBConfig: Error listing pool members for pool: %s, err: %v\n", poolName, err)
 	} else {
-		for _, member := range poolMembers {
-			nodeParts := strings.Split(member, ":")
+		for _, member := range poolMembers.PoolMembers {
+			nodeParts := strings.Split(member.Name, ":")
 			if len(nodeParts) == 2 {
 				node := model.LBTarget{}
 				node.HostIP = nodeParts[0]
@@ -284,8 +284,8 @@ func (p *F5BigIPProvider) GetLBConfigs() ([]model.LBConfig, error) {
 			if err != nil {
 				logrus.Errorf("f5 GetLBConfigs: Error listing pool members for pool: %s, err: %v\n", pool.Name, err)
 			} else {
-				for _, member := range poolMembers {
-					nodeParts := strings.Split(member, ":")
+				for _, member := range poolMembers.PoolMembers {
+					nodeParts := strings.Split(member.Name, ":")
 					if len(nodeParts) == 2 {
 						node := model.LBTarget{}
 						node.HostIP = nodeParts[0]
