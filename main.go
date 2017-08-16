@@ -21,9 +21,10 @@ const (
 )
 
 var (
-	providerName = flag.String("provider", "f5_BigIP", "External LB  provider name")
-	debug        = flag.Bool("debug", false, "Debug")
-	logFile      = flag.String("log", "", "Log file")
+	providerName    = flag.String("provider", "f5_BigIP", "External LB  provider name")
+	debug           = flag.Bool("debug", false, "Debug")
+	logFile         = flag.String("log", "", "Log file")
+	metadataAddress = flag.String("metadata-address", "rancher-metadata", "The metadata service address")
 
 	provider providers.Provider
 	m        *metadata.MetadataClient
@@ -53,7 +54,7 @@ func setEnv() {
 
 	// initialize metadata client
 	var err error
-	m, err = metadata.NewMetadataClient()
+	m, err = metadata.NewMetadataClient(*metadataAddress)
 	if err != nil {
 		logrus.Fatalf("Failed to initialize Rancher metadata client: %v", err)
 	}
