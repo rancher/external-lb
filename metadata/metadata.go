@@ -10,11 +10,15 @@ import (
 )
 
 const (
-	metadataUrl                = "http://rancher-metadata/2015-12-19"
+	metadataURLTemplate        = "http://%v/2015-12-19"
 	serviceLabelEndpoint       = "io.rancher.service.external_lb.endpoint"
 	serviceLabelEndpointLegacy = "io.rancher.service.external_lb_endpoint"
+
+	// DefaultMetadataAddress specifies the default value to use if nothing is specified
+	DefaultMetadataAddress = "169.254.169.250"
 )
 
+// MetadataClient ...
 type MetadataClient struct {
 	MetadataClient  metadata.Client
 	EnvironmentUUID string
@@ -37,9 +41,14 @@ func getEnvironmentUUID(m metadata.Client) (string, error) {
 	return "", fmt.Errorf("Error reading stack info: %v", err)
 }
 
-func NewMetadataClient() (*MetadataClient, error) {
+// NewMetadataClient ...
+func NewMetadataClient(metadataAddress string) (*MetadataClient, error) {
 	logrus.Debug("Initializing rancher-metadata client")
-	m, err := metadata.NewClientAndWait(metadataUrl)
+	if metadataAddress == "" {
+		metadataAddress = DefaultMetadataAddress
+	}
+	metadataURL := fmt.Sprintf(metadataURLTemplate, metadataAddress)
+	m, err := metadata.NewClientAndWait(metadataURL)
 	if err != nil {
 		return nil, err
 	}
@@ -55,10 +64,12 @@ func NewMetadataClient() (*MetadataClient, error) {
 	}, nil
 }
 
+// GetVersion ...
 func (m *MetadataClient) GetVersion() (string, error) {
 	return m.MetadataClient.GetVersion()
 }
 
+// GetMetadataLBConfigs ...
 func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[string]model.LBConfig, error) {
 	lbConfigs := make(map[string]model.LBConfig)
 	services, err := m.MetadataClient.GetServices()
