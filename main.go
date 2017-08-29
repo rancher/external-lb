@@ -6,6 +6,7 @@ import (
 	"github.com/rancher/external-lb/metadata"
 	"github.com/rancher/external-lb/model"
 	"github.com/rancher/external-lb/providers"
+	_ "github.com/rancher/external-lb/providers/avi"
 	_ "github.com/rancher/external-lb/providers/elbv1"
 	_ "github.com/rancher/external-lb/providers/f5"
 	"os"
