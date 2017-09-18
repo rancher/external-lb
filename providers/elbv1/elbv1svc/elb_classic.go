@@ -61,21 +61,13 @@ func (svc *ELBClassicService) GetLoadBalancers(names ...string) ([]*elb.LoadBala
 // as map of load balancer name => map[string]string.
 func (svc *ELBClassicService) DescribeLBTags(loadBalancerNames []string) (map[string]map[string]string, error) {
 	logrus.Debugf("DescribeLBTags => %v", loadBalancerNames)
-	awsNames := make([]*string, len(loadBalancerNames))
-	for i, n := range loadBalancerNames {
-		awsNames[i] = aws.String(n)
-	}
-
-	params := &elb.DescribeTagsInput{
-		LoadBalancerNames: awsNames,
-	}
-	resp, err := svc.elbc.DescribeTags(params)
+	tagDescriptions, err := svc.findLBTags(loadBalancerNames)
 	if err != nil {
 		return nil, fmt.Errorf("DescribeTags SDK error: %v", err)
 	}
 
 	ret := make(map[string]map[string]string)
-	for _, desc := range resp.TagDescriptions {
+	for _, desc := range tagDescriptions {
 		tags := mapTags(desc.Tags)
 		ret[*desc.LoadBalancerName] = tags
 	}
@@ -359,4 +351,36 @@ func (svc *ELBClassicService) GetRegisteredInstances(loadBalancerName string) ([
 
 	logrus.Debugf("GetRegisteredInstances result: %v", instanceIds)
 	return instanceIds, nil
+}
+
+func (svc *ELBClassicService) findLBTags(loadBalancerNames []string) ([]*elb.TagDescription, error) {
+	var dividedNames [][]string
+	chunkSize := 20
+	for i := 0; i < len(loadBalancerNames); i += chunkSize {
+		end := i + chunkSize
+		if end > len(loadBalancerNames) {
+			end = len(loadBalancerNames)
+		}
+		dividedNames = append(dividedNames, loadBalancerNames[i:end])
+	}
+
+	var tagDescriptions []*elb.TagDescription
+
+	for _, names := range dividedNames {
+		awsNames := make([]*string, len(names))
+		for i, n := range names {
+			awsNames[i] = aws.String(n)
+		}
+
+		params := &elb.DescribeTagsInput{
+			LoadBalancerNames: awsNames,
+		}
+		resp, err := svc.elbc.DescribeTags(params)
+		if err != nil {
+			return nil, fmt.Errorf("DescribeTags SDK error: %v", err)
+		}
+		tagDescriptions = append(tagDescriptions, resp.TagDescriptions...)
+	}
+
+	return tagDescriptions, nil
 }
