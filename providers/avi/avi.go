@@ -2,6 +2,7 @@ package avi
 
 import (
 	"net/url"
+	// "time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/model"
@@ -47,17 +48,36 @@ func (p *AviProvider) Init() error {
 	p.aviSession = aviSession
 	p.cloudRef = cloudRef
 	log.Info("Avi configuration OK")
+	// go healthCheck(p)
 	return nil
 }
+
+//func healthCheck(p *AviProvider) {
+//	ticker := time.NewTicker(5 * time.Second)
+//	quit := make(chan struct{})
+//	for {
+//		select {
+//		case <-ticker.C:
+//			err := p.HealthCheck()
+//			if err != nil {
+//				log.Error("health check failed")
+//			}
+//		case <-quit:
+//			ticker.Stop()
+//			return
+//		}
+//	}
+//}
 
 func (p *AviProvider) GetName() string {
 	return ProviderName
 }
 
 func (p *AviProvider) HealthCheck() error {
-	_, err := p.aviSession.Get("")
+	cloudName := p.cfg.cloudName
+	_, err := p.aviSession.GetCloudRef(cloudName)
 	if err != nil {
-		log.Errorf("Health check failed with error %s", err)
+		log.Errorf("Avi Health check failed with error: %s", err)
 		return err
 	}
 

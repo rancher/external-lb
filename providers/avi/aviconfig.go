@@ -61,8 +61,8 @@ func GetAviConfig() (*AviConfig, error) {
 	conf[AVI_CA_CERT_PATH] = os.Getenv(AVI_CA_CERT_PATH)
 	conf[LB_TARGET_RANCHER_SUFFIX] = os.Getenv(LB_TARGET_RANCHER_SUFFIX)
 
-	// Assume VSes already configured, so following not needed
-	// conf[AVI_CLOUD_NAME] = os.Getenv(AVI_CLOUD_NAME)
+	// Assume VSes already configured in a given cloud only
+	conf[AVI_CLOUD_NAME] = os.Getenv(AVI_CLOUD_NAME)
 	// conf[AVI_DNS_SUBDOMAIN] = os.Getenv(AVI_DNS_SUBDOMAIN)
 
 	conf[AVI_PASSWORD] = getAviPasswd()
