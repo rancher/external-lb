@@ -112,10 +112,54 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	_, err = p.client.DeleteService(farm.FarmName, serviceName)
 
 	if err != nil {
-		return "", fmt.Errorf("Failed to delete service from Zevenet loadbalancer: %v", err)
+		return "", fmt.Errorf("Failed to delete service on Zevenet loadbalancer: %v", err)
+	}
+
+	// re-create the service
+	service, err := p.client.CreateService(farm.FarmName, serviceName)
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to create service on Zevenet loadbalancer: %v", err)
+	}
+
+	// update values
+	service.HostPattern = config.LBEndpoint
+
+	err = p.client.UpdateService(service)
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to update service on Zevenet loadbalancer: %v", err)
+	}
+
+	// add backends
+	for _, target := range config.LBTargets {
+		// get the port number
+		port, err := strconv.Atoi(target.Port)
+
+		if err != nil {
+			return "", fmt.Errorf("Failed to parse port number '%v': %v", target.Port, err)
+		}
+
+		// create the backend
+		_, err = p.client.CreateBackend(farm.FarmName, service.ServiceName, target.HostIP, port)
+
+		if err != nil {
+			return "", fmt.Errorf("Failed to create backend on Zevenet loadbalancer: %v", err)
+		}
+	}
+
+	// restart loadbalancer
+	err = p.client.RestartFarm(farm.FarmName)
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
 	}
 
 	return "", nil
+}
+
+func (p *ZevenetProvider) UpdateLBConfig(config model.LBConfig) (string, error) {
+	return p.AddLBConfig(config)
 }
 
 func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
@@ -138,67 +182,25 @@ func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
 	// delete the service
 	serviceName := getServiceName(&config)
 
-	_, err = p.client.DeleteService(farm.FarmName, serviceName)
+	deleted, err := p.client.DeleteService(farm.FarmName, serviceName)
 
 	if err != nil {
-		return fmt.Errorf("Failed to delete service on Zevenet loadbalancer: %v", err)
+		return fmt.Errorf("Failed to delete service from Zevenet loadbalancer: %v", err)
 	}
 
-	// re-create the service
-	service, err := p.client.CreateService(farm.FarmName, serviceName)
-
-	if err != nil {
-		return fmt.Errorf("Failed to create service on Zevenet loadbalancer: %v", err)
+	if !deleted {
+		// nothing deleted, skip restart
+		return nil
 	}
 
-	// update values
-	service.HostPattern = config.LBEndpoint
-
-	err = p.client.UpdateService(service)
+	// restart loadbalancer
+	err = p.client.RestartFarm(farm.FarmName)
 
 	if err != nil {
-		return fmt.Errorf("Failed to update service on Zevenet loadbalancer: %v", err)
+		return fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
 	}
 
 	return nil
-}
-
-func (p *ZevenetProvider) UpdateLBConfig(config model.LBConfig) (string, error) {
-	// first check if changes can be made
-	if available, msg := p.client.Ping(); !available {
-		return "", fmt.Errorf("Failed to ping Zevenet loadbalancer: %v", msg)
-	}
-
-	// check if the farm exists
-	farm, err := p.client.GetFarm(p.farmName)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to get farm from Zevenet loadbalancer: %v", err)
-	}
-
-	if farm == nil {
-		return "", fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
-	}
-
-	// get the service
-	serviceName := getServiceName(&config)
-
-	service, err := farm.GetService(serviceName)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to get service from Zevenet loadbalancer: %v", err)
-	}
-
-	if service == nil {
-		return "", fmt.Errorf("Service not found on Zevenet loadbalancer: %v", serviceName)
-	}
-
-	// update the service
-	service.HostPattern = config.LBEndpoint
-
-	log.Debugf("Zevenet GetLBConfigs service updated: %v\n", service)
-
-	return "", p.client.UpdateService(service)
 }
 
 func (p *ZevenetProvider) GetLBConfigs() ([]model.LBConfig, error) {
@@ -238,8 +240,6 @@ func (p *ZevenetProvider) GetLBConfigs() ([]model.LBConfig, error) {
 
 		lbConfigs = append(lbConfigs, cfg)
 	}
-
-	log.Debugf("Zevenet GetLBConfigs returned: %v\n", lbConfigs)
 
 	return lbConfigs, nil
 }
