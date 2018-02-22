@@ -9,6 +9,9 @@ type LBConfig struct {
 	LBTargetPoolName string
 	LBTargetPort     string
 	LBTargets        []LBTarget
+
+	// LBLabels contains all Rancher labels starting with "io.rancher.service.external_lb"
+	LBLabels map[string]string
 }
 
 type LBTarget struct {

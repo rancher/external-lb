@@ -2,15 +2,17 @@ package metadata
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/model"
 	"github.com/rancher/go-rancher-metadata/metadata"
-	"strings"
-	"time"
 )
 
 const (
 	metadataURLTemplate        = "http://%v/2015-12-19"
+	serviceLabelsPrefix        = "io.rancher.service.external_lb"
 	serviceLabelEndpoint       = "io.rancher.service.external_lb.endpoint"
 	serviceLabelEndpointLegacy = "io.rancher.service.external_lb_endpoint"
 
@@ -109,7 +111,17 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[stri
 				continue
 			}
 
+			// copy labels
+			labels := make(map[string]string)
+
+			for _, key := range service.Labels {
+				if strings.HasPrefix(key, serviceLabelsPrefix) {
+					labels[strings.TrimLeft(key, serviceLabelsPrefix)] = service.Labels[key]
+				}
+			}
+
 			lbConfig := model.LBConfig{}
+			lbConfig.LBLabels = labels
 			lbConfig.LBEndpoint = endpoint
 			lbConfig.LBTargetPort = portspec[0]
 			lbConfig.LBTargetPoolName = fmt.Sprintf("%s_%s_%s_%s", service.Name, service.StackName,
