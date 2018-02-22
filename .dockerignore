@@ -2,3 +2,5 @@
 ./.dapper
 ./dist
 ./.trash-cache
+./Dockerfile.dapper*
+./external-lb.exe
