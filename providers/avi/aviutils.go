@@ -128,7 +128,12 @@ func formLBConfig(vs map[string]interface{},
 
 	vsName := vs["name"].(string)
 	poolName := pool["name"].(string)
-	return model.LBConfig{vsName, poolName, defaultPort, lbTargets}
+	return model.LBConfig{
+		LBEndpoint:       vsName,
+		LBTargetPoolName: poolName,
+		LBTargetPort:     defaultPort,
+		LBTargets:        lbTargets,
+	}
 }
 
 func GetVsFqdn(vs map[string]interface{}) (string, error) {
