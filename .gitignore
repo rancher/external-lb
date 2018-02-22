@@ -5,3 +5,5 @@ external-lb
 /dist
 *.swp
 /.trash-cache
+/Dockerfile.dapper*
+/external-lb.exe
