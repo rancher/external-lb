@@ -106,6 +106,13 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
 	}
 
+	// check if http redirection applies
+	httpRedirectURL, _ := config.LBLabels["httpRedirectUrl"]
+
+	if farm.Listener != zlb.FarmListener_HTTP {
+		httpRedirectURL = ""
+	}
+
 	// delete the service
 	serviceName := getServiceName(&config)
 
@@ -124,6 +131,7 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 
 	// update values
 	service.HostPattern = config.LBEndpoint
+	service.RedirectURL = httpRedirectURL
 
 	err = p.client.UpdateService(service)
 
@@ -131,20 +139,22 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", fmt.Errorf("Failed to update service on Zevenet loadbalancer: %v", err)
 	}
 
-	// add backends
-	for _, target := range config.LBTargets {
-		// get the port number
-		port, err := strconv.Atoi(target.Port)
+	// add backends (if not redirecting)
+	if httpRedirectURL == "" {
+		for _, target := range config.LBTargets {
+			// get the port number
+			port, err := strconv.Atoi(target.Port)
 
-		if err != nil {
-			return "", fmt.Errorf("Failed to parse port number '%v': %v", target.Port, err)
-		}
+			if err != nil {
+				return "", fmt.Errorf("Failed to parse port number '%v': %v", target.Port, err)
+			}
 
-		// create the backend
-		_, err = p.client.CreateBackend(farm.FarmName, service.ServiceName, target.HostIP, port)
+			// create the backend
+			_, err = p.client.CreateBackend(farm.FarmName, service.ServiceName, target.HostIP, port)
 
-		if err != nil {
-			return "", fmt.Errorf("Failed to create backend on Zevenet loadbalancer: %v", err)
+			if err != nil {
+				return "", fmt.Errorf("Failed to create backend on Zevenet loadbalancer: %v", err)
+			}
 		}
 	}
 
