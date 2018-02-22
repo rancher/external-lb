@@ -116,7 +116,9 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[stri
 
 			for key, value := range service.Labels {
 				if strings.HasPrefix(key, serviceLabelsPrefix) {
-					labels[strings.TrimLeft(key, serviceLabelsPrefix)] = value
+					newKey := strings.Replace(key, serviceLabelsPrefix, "", 1)
+
+					labels[newKey] = value
 				}
 			}
 
