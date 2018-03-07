@@ -18,8 +18,7 @@ const (
 )
 
 type ZevenetProvider struct {
-	client   *zlb.ZapiSession
-	farmName string
+	client *zlb.ZapiSession
 }
 
 func init() {
@@ -58,12 +57,7 @@ func (p *ZevenetProvider) Init() (err error) {
 		return fmt.Errorf("ZAPI_KEY is not set")
 	}
 
-	p.farmName = os.Getenv("ZAPI_FARM")
-	if len(p.farmName) == 0 {
-		return fmt.Errorf("ZAPI_FARM is not set")
-	}
-
-	log.Debugf("Initializing Zevenet provider with farm %v on host: %s, key-length: %d", p.farmName, host, len(zapiKey))
+	log.Debugf("Initializing Zevenet provider: %s, key-length: %d", host, len(zapiKey))
 
 	p.client, err = zlb.Connect(host, zapiKey, nil)
 
@@ -71,7 +65,7 @@ func (p *ZevenetProvider) Init() (err error) {
 		return
 	}
 
-	log.Infof("Configured %s provider using farm %v on host %s", p.GetName(), p.farmName, host)
+	log.Infof("Configured %s provider using %s", p.GetName(), host)
 	return
 }
 
@@ -95,15 +89,43 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", fmt.Errorf("Failed to ping Zevenet loadbalancer: %v", msg)
 	}
 
+	// retrieve farm list
+	farmList, _ := config.LBLabels["farms"]
+
+	if farmList == "" {
+		return "", fmt.Errorf("No farm specified; missing 'io.rancher.service.external_lb.farms' label?")
+	}
+
+	farms := strings.Split(farmList, ",")
+
+	// add configurations
+	for _, farmName := range farms {
+		// ignore empty entry
+		if farmName == "" {
+			continue
+		}
+
+		// configure
+		_, err := p.addLBConfigSingleFarm(farmName, config)
+
+		if err != nil {
+			log.Errorf("Failed to add farm %v: %v", farmName, err)
+		}
+	}
+
+	return "", nil
+}
+
+func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LBConfig) (string, error) {
 	// check if the farm exists
-	farm, err := p.client.GetFarm(p.farmName)
+	farm, err := p.client.GetFarm(farmName)
 
 	if err != nil {
 		return "", fmt.Errorf("Failed to get farm from Zevenet loadbalancer: %v", err)
 	}
 
 	if farm == nil {
-		return "", fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
+		return "", fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", farmName)
 	}
 
 	// delete the service
@@ -195,42 +217,41 @@ func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
 		return fmt.Errorf("Failed to ping Zevenet loadbalancer: %v", msg)
 	}
 
-	// check if the farm exists
-	farm, err := p.client.GetFarm(p.farmName)
+	// retrieve farm list
+	farmList, _ := config.LBLabels["farms"]
 
-	if err != nil {
-		return fmt.Errorf("Failed to get farm from Zevenet loadbalancer: %v", err)
+	if farmList == "" {
+		return fmt.Errorf("No farm specified; missing 'io.rancher.service.external_lb.farms' label?")
 	}
 
-	if farm == nil {
-		return fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
-	}
-
-	// delete the service
+	farms := strings.Split(farmList, ",")
 	serviceName := getServiceName(&config)
 
-	log.Debugf("Deleting service on farm %v: %v", farm.FarmName, serviceName)
+	for _, farmName := range farms {
+		// delete the service
+		log.Debugf("Deleting service on farm %v: %v", farmName, serviceName)
 
-	deleted, err := p.client.DeleteService(farm.FarmName, serviceName)
+		deleted, err := p.client.DeleteService(farmName, serviceName)
 
-	if err != nil {
-		return fmt.Errorf("Failed to delete service from Zevenet loadbalancer: %v", err)
-	}
+		if err != nil {
+			return fmt.Errorf("Failed to delete service from Zevenet loadbalancer: %v", err)
+		}
 
-	if !deleted {
-		// nothing deleted, skip restart
-		log.Debugf("Service does not exist on farm %v: %v; Skipping farm restart...", farm.FarmName, serviceName)
+		if !deleted {
+			// nothing deleted, skip restart
+			log.Debugf("Service does not exist on farm %v: %v; Skipping farm restart...", farmName, serviceName)
 
-		return nil
-	}
+			return nil
+		}
 
-	// restart loadbalancer
-	log.Debugf("Restarting farm: %v", farm.FarmName)
+		// restart loadbalancer
+		log.Debugf("Restarting farm: %v", farmName)
 
-	err = p.client.RestartFarm(farm.FarmName)
+		err = p.client.RestartFarm(farmName)
 
-	if err != nil {
-		return fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
+		if err != nil {
+			return fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
+		}
 	}
 
 	return nil
@@ -242,39 +263,55 @@ func (p *ZevenetProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		return nil, fmt.Errorf("Failed to ping Zevenet loadbalancer: %v", msg)
 	}
 
-	// check if the farm exists
-	log.Debugf("Gathering existing services on farm: %v", p.farmName)
-
-	farm, err := p.client.GetFarm(p.farmName)
+	// get all farms
+	farms, err := p.client.GetAllFarms()
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get farm from Zevenet loadbalancer: %v", err)
+		return nil, fmt.Errorf("Failed to get farms from Zevenet loadbalancer: %v", err)
 	}
 
-	if farm == nil {
-		return nil, fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
+	lbConfigMap := make(map[string]model.LBConfig)
+
+	for _, farmInfo := range farms {
+		// check if the farm exists
+		log.Debugf("Gathering existing services on farm: %v", farmInfo.FarmName)
+
+		farm, err := p.client.GetFarm(farmInfo.FarmName)
+
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get farm %v from Zevenet loadbalancer: %v", farmInfo.FarmName, err)
+		}
+
+		if farm == nil {
+			return nil, fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", farmInfo.FarmName)
+		}
+
+		// get services
+		for _, service := range farm.Services {
+			log.Debugf("Found service on farm '%v': %v", farm.FarmName, service.ServiceName)
+
+			cfg := model.LBConfig{
+				LBTargetPoolName: getPoolName(&service),
+				LBTargetPort:     strconv.Itoa(farm.VirtualPort),
+				LBEndpoint:       service.HostPattern,
+			}
+
+			// get backends
+			for _, backend := range service.Backends {
+				cfg.LBTargets = append(cfg.LBTargets, model.LBTarget{
+					HostIP: backend.IPAddress,
+					Port:   strconv.Itoa(backend.Port),
+				})
+			}
+
+			lbConfigMap[service.ServiceName] = cfg
+		}
 	}
 
-	// get services
-	var lbConfigs []model.LBConfig
+	// transform
+	lbConfigs := make([]model.LBConfig, len(lbConfigMap))
 
-	for _, service := range farm.Services {
-		log.Debugf("Found service on farm '%v': %v", farm.FarmName, service.ServiceName)
-
-		cfg := model.LBConfig{
-			LBTargetPoolName: getPoolName(&service),
-			LBTargetPort:     strconv.Itoa(farm.VirtualPort),
-			LBEndpoint:       service.HostPattern,
-		}
-
-		// get backends
-		for _, backend := range service.Backends {
-			cfg.LBTargets = append(cfg.LBTargets, model.LBTarget{
-				HostIP: backend.IPAddress,
-				Port:   strconv.Itoa(backend.Port),
-			})
-		}
-
+	for _, cfg := range lbConfigMap {
 		lbConfigs = append(lbConfigs, cfg)
 	}
 
