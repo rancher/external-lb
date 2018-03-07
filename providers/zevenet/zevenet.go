@@ -106,20 +106,25 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", fmt.Errorf("Farm not found on Zevenet loadbalancer: %v", p.farmName)
 	}
 
-	// check if http redirection applies
-	httpRedirectURL, _ := config.LBLabels["httpRedirectUrl"]
-
-	if farm.Listener != zlb.FarmListener_HTTP {
-		httpRedirectURL = ""
-	}
-
 	// delete the service
 	serviceName := getServiceName(&config)
+
+	log.Debugf("Deleting service on farm %v: %v", farm.FarmName, serviceName)
 
 	_, err = p.client.DeleteService(farm.FarmName, serviceName)
 
 	if err != nil {
 		return "", fmt.Errorf("Failed to delete service on Zevenet loadbalancer: %v", err)
+	}
+
+	// check if http redirection applies
+	log.Debugf("Adding service on farm %v: %v", farm.FarmName, serviceName)
+	log.Debugf("Service labels: %v", config.LBLabels)
+
+	httpRedirectURL, _ := config.LBLabels["httpRedirectUrl"]
+
+	if farm.Listener != zlb.FarmListener_HTTP {
+		httpRedirectURL = ""
 	}
 
 	// re-create the service
@@ -130,6 +135,10 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	}
 
 	// update values
+	if httpRedirectURL != "" {
+		log.Debugf("Setting redirect URL for service '%v': %v", serviceName, httpRedirectURL)
+	}
+
 	service.HostPattern = config.LBEndpoint
 	service.RedirectURL = httpRedirectURL
 
@@ -141,6 +150,8 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 
 	// add backends (if not redirecting)
 	if httpRedirectURL == "" {
+		log.Debugf("Adding backends to service: %v", serviceName)
+
 		for _, target := range config.LBTargets {
 			// get the port number
 			port, err := strconv.Atoi(target.Port)
@@ -150,6 +161,8 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 			}
 
 			// create the backend
+			log.Debugf("Adding backend to service '%v': %v:%v", serviceName, target.HostIP, port)
+
 			_, err = p.client.CreateBackend(farm.FarmName, service.ServiceName, target.HostIP, port)
 
 			if err != nil {
@@ -159,6 +172,8 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	}
 
 	// restart loadbalancer
+	log.Debugf("Restarting farm: %v", farm.FarmName)
+
 	err = p.client.RestartFarm(farm.FarmName)
 
 	if err != nil {
@@ -192,6 +207,8 @@ func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
 	// delete the service
 	serviceName := getServiceName(&config)
 
+	log.Debugf("Deleting service on farm %v: %v", farm.FarmName, serviceName)
+
 	deleted, err := p.client.DeleteService(farm.FarmName, serviceName)
 
 	if err != nil {
@@ -200,10 +217,14 @@ func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
 
 	if !deleted {
 		// nothing deleted, skip restart
+		log.Debugf("Service does not exist on farm %v: %v; Skipping farm restart...", farm.FarmName, serviceName)
+
 		return nil
 	}
 
 	// restart loadbalancer
+	log.Debugf("Restarting farm: %v", farm.FarmName)
+
 	err = p.client.RestartFarm(farm.FarmName)
 
 	if err != nil {
@@ -220,6 +241,8 @@ func (p *ZevenetProvider) GetLBConfigs() ([]model.LBConfig, error) {
 	}
 
 	// check if the farm exists
+	log.Debugf("Gathering existing services on farm: %v", p.farmName)
+
 	farm, err := p.client.GetFarm(p.farmName)
 
 	if err != nil {
@@ -234,6 +257,8 @@ func (p *ZevenetProvider) GetLBConfigs() ([]model.LBConfig, error) {
 	var lbConfigs []model.LBConfig
 
 	for _, service := range farm.Services {
+		log.Debugf("Found service on farm '%v': %v", farm.FarmName, service.ServiceName)
+
 		cfg := model.LBConfig{
 			LBTargetPoolName: getPoolName(&service),
 			LBTargetPort:     strconv.Itoa(farm.VirtualPort),
