@@ -135,12 +135,14 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	}
 
 	// update values
+	service.HostPattern = config.LBEndpoint
+
 	if httpRedirectURL != "" {
 		log.Debugf("Setting redirect URL for service '%v': %v", serviceName, httpRedirectURL)
-	}
 
-	service.HostPattern = config.LBEndpoint
-	service.RedirectURL = httpRedirectURL
+		service.RedirectURL = httpRedirectURL
+		service.RedirectType = zlb.ServiceRedirectType_Append
+	}
 
 	err = p.client.UpdateService(service)
 
