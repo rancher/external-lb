@@ -12,7 +12,7 @@ import (
 
 const (
 	metadataURLTemplate        = "http://%v/2015-12-19"
-	serviceLabelsPrefix        = "io.rancher.service.external_lb"
+	serviceLabelsPrefix        = "io.rancher.service.external_lb."
 	serviceLabelEndpoint       = "io.rancher.service.external_lb.endpoint"
 	serviceLabelEndpointLegacy = "io.rancher.service.external_lb_endpoint"
 

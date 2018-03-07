@@ -121,7 +121,7 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	log.Debugf("Adding service on farm %v: %v", farm.FarmName, serviceName)
 	log.Debugf("Service labels: %v", config.LBLabels)
 
-	httpRedirectURL, _ := config.LBLabels["httpRedirectUrl"]
+	httpRedirectURL, _ := config.LBLabels["http_redirect_url"]
 
 	if farm.Listener != zlb.FarmListener_HTTP {
 		httpRedirectURL = ""
