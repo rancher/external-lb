@@ -403,7 +403,7 @@ type ServiceDetails struct {
 	ServiceName                         string                     `json:"id"`
 	FarmGuardianEnabled                 bool                       `json:"fgenabled,string"`
 	FarmGuardianLogsEnabled             OptionalBool               `json:"fglog"`
-	FarmGuardianScriptEnabled           OptionalBool               `json:"fgscript"`
+	FarmGuardianScript                  string                     `json:"fgscript"`
 	FarmGuardianCheckIntervalSeconds    int                        `json:"fgtimecheck"`
 	EncryptedBackends                   bool                       `json:"httpsb,string"`
 	LastResponseBalancingEnabled        bool                       `json:"leastresp,string"`
@@ -501,10 +501,37 @@ func (s *ZapiSession) CreateService(farmName string, serviceName string) (*Servi
 	return farm.GetService(serviceName)
 }
 
+type farmguardianUpdate struct {
+	ServiceName                      string       `json:"service"`
+	FarmGuardianEnabled              bool         `json:"fgenabled,string"`
+	FarmGuardianLogsEnabled          OptionalBool `json:"fglog"`
+	FarmGuardianScript               string       `json:"fgscript"`
+	FarmGuardianCheckIntervalSeconds int          `json:"fgtimecheck"`
+}
+
 // UpdateService updates a service on a farm.
 // This method does *not* update the *backends*. Use *UpdateBackend()* instead.
 func (s *ZapiSession) UpdateService(service *ServiceDetails) error {
-	return s.put(service, "farms", service.FarmName, "services", service.ServiceName)
+	err := s.put(service, "farms", service.FarmName, "services", service.ServiceName)
+
+	if err != nil {
+		return err
+	}
+
+	// update farm guardian
+	fg := farmguardianUpdate{
+		ServiceName:                      service.ServiceName,
+		FarmGuardianEnabled:              service.FarmGuardianEnabled,
+		FarmGuardianScript:               service.FarmGuardianScript,
+		FarmGuardianCheckIntervalSeconds: service.FarmGuardianCheckIntervalSeconds,
+		FarmGuardianLogsEnabled:          service.FarmGuardianLogsEnabled,
+	}
+
+	if fg.FarmGuardianScript == "" {
+		fg.FarmGuardianScript = "check_http -H HOST -p PORT"
+	}
+
+	return s.put(fg, "farms", service.FarmName, "fg")
 }
 
 type backendDetailsResponse struct {
