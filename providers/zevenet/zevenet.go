@@ -143,10 +143,26 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 	log.Debugf("Adding service on farm %v: %v", farm.FarmName, serviceName)
 	log.Debugf("Service labels: %v", config.LBLabels)
 
-	httpRedirectURL, _ := config.LBLabels["http_redirect_url"]
+	httpRedirectURL, _ := config.LBLabels[fmt.Sprintf("%v.http_redirect_url", farm.FarmName)]
+
+	if httpRedirectURL == "" {
+		httpRedirectURL, _ = config.LBLabels["http_redirect_url"]
+	}
 
 	if farm.Listener != zlb.FarmListener_HTTP {
 		httpRedirectURL = ""
+	}
+
+	hostPattern, _ := config.LBLabels[fmt.Sprintf("%v.endpoint", farm.FarmName)]
+
+	if hostPattern == "" {
+		hostPattern = config.LBEndpoint
+	}
+
+	urlPattern, _ := config.LBLabels[fmt.Sprintf("%v.url_pattern", farm.FarmName)]
+
+	if urlPattern == "" {
+		urlPattern, _ = config.LBLabels["url_pattern"]
 	}
 
 	checkCmd, _ := config.LBLabels["check"]
@@ -159,7 +175,8 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 	}
 
 	// update values
-	service.HostPattern = config.LBEndpoint
+	service.HostPattern = hostPattern
+	service.URLPattern = urlPattern
 
 	if httpRedirectURL != "" {
 		log.Debugf("Setting redirect URL for service '%v': %v", serviceName, httpRedirectURL)
