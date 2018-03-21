@@ -194,7 +194,11 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 			service.FarmGuardianCheckIntervalSeconds = 5
 
 			if checkCmd == "true" {
-				service.FarmGuardianScript = "check_http -H HOST -p PORT"
+				if encryptedBackends {
+					service.FarmGuardianScript = "check_https -H HOST -p PORT"
+				} else {
+					service.FarmGuardianScript = "check_http -H HOST -p PORT"
+				}
 			} else {
 				service.FarmGuardianScript = checkCmd
 			}
