@@ -195,7 +195,7 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 
 			if checkCmd == "true" {
 				if encryptedBackends {
-					service.FarmGuardianScript = "check_https -H HOST -p PORT"
+					service.FarmGuardianScript = "check_http -S -H HOST -p PORT"
 				} else {
 					service.FarmGuardianScript = "check_http -H HOST -p PORT"
 				}
