@@ -165,6 +165,9 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 		urlPattern, _ = config.LBLabels["url_pattern"]
 	}
 
+	encryptedBackendsStr, _ := config.LBLabels["encrypt"]
+	encryptedBackends := encryptedBackendsStr == "true"
+
 	checkCmd, _ := config.LBLabels["check"]
 
 	// re-create the service
@@ -196,6 +199,9 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 				service.FarmGuardianScript = checkCmd
 			}
 		}
+
+		// enable re-encryption
+		service.EncryptedBackends = encryptedBackends
 	}
 
 	err = p.client.UpdateService(service)
