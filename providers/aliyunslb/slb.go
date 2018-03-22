@@ -106,12 +106,6 @@ func (p *AliyunSLBProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		return "", err
 	}
 
-	if !p.checkListenersInstancePort(config.LBEndpoint, config.LBTargetPort) {
-		return "", fmt.Errorf(
-			"SLB '%s' is not configured with instance port matching the service port '%s'",
-			config.LBEndpoint, config.LBTargetPort)
-	}
-
 	ecsInstanceIds, err := p.getECSInstances(config.LBTargets)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ECS instances: %v", err)
@@ -168,12 +162,6 @@ func (p *AliyunSLBProvider) UpdateLBConfig(config model.LBConfig) (string, error
 	lb, err := p.getLoadBalancerById(config.LBEndpoint)
 	if err != nil {
 		return "", err
-	}
-
-	if !p.checkListenersInstancePort(config.LBEndpoint, config.LBTargetPort) {
-		return "", fmt.Errorf(
-			"SLB '%s' is not configured with instance port matching the service port '%s'",
-			config.LBEndpoint, config.LBTargetPort)
 	}
 
 	ecsInstanceIds, err := p.getECSInstances(config.LBTargets)
@@ -410,27 +398,6 @@ func (p *AliyunSLBProvider) getECSInstances(targets []model.LBTarget) ([]string,
 	}
 
 	return instanceIds, nil
-}
-
-func (p *AliyunSLBProvider) checkListenersInstancePort(loadBalancerId string, port string) bool {
-	found := false
-
-	lb, err := p.slbClient.DescribeLoadBalancerAttribute(loadBalancerId)
-	if err != nil {
-		logrus.Errorf("Failed to DescribeLoadBalancerAttribute: %v", err)
-		return found
-	}
-
-	logrus.Debugf("SLB: %s listenerPorts: %v", lb.LoadBalancerId, lb.ListenerPorts)
-	logrus.Debugf("SLB: %s ListenerPortsAndProtocol: %v", lb.LoadBalancerId, lb.ListenerPortsAndProtocol)
-	for _, listenerPort := range lb.ListenerPorts.ListenerPort {
-		if strconv.Itoa(listenerPort) == port {
-			found = true
-			break
-		}
-	}
-
-	return found
 }
 
 func getLBTags(config model.LBConfig) string {
