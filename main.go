@@ -27,7 +27,7 @@ var (
 	providerName    = flag.String("provider", "f5_BigIP", "External LB  provider name")
 	debug           = flag.Bool("debug", false, "Debug")
 	logFile         = flag.String("log", "", "Log file")
-	metadataAddress = flag.String("metadata-address", "rancher-metadata", "The metadata service address")
+	metadataAddress = flag.String("metadata-address", "169.254.169.250", "The metadata service address")
 
 	provider providers.Provider
 	m        *metadata.MetadataClient
