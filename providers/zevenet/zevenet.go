@@ -162,7 +162,7 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 		}
 
 		for _, srv := range farm.Services {
-			if strings.HasPrefix(srv.ServiceName, sn+"_") && strings.HasSuffix(srv.ServiceName, "_"+suffix) {
+			if strings.HasPrefix(srv.ServiceName, sn+"--U--") && strings.HasSuffix(srv.ServiceName, "--U--"+suffix) {
 				log.Debugf("Deleting service on farm %v: %v", farm.FarmName, srv.ServiceName)
 
 				_, err := p.client.DeleteService(srv.FarmName, srv.ServiceName)
