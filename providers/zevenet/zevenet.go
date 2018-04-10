@@ -25,25 +25,49 @@ func init() {
 	providers.RegisterProvider(providerSlug, new(ZevenetProvider))
 }
 
-func getServiceName(config *model.LBConfig) (pn string) {
-	// format: <service_name>_<environment_uuid>_rancher.internal
-	pn = config.LBTargetPoolName
-
+func encodeServiceName(name string) string {
 	// replace invalid chars
-	pn = strings.Replace(pn, ".", "--D--", -1)
-	pn = strings.Replace(pn, "_", "--U--", -1)
+	name = strings.Replace(name, ".", "--D--", -1)
+	name = strings.Replace(name, "_", "--U--", -1)
 
+	return name
+}
+
+func decodeServiceName(name string) string {
+	// replace invalid chars
+	name = strings.Replace(name, "--D--", ".", -1)
+	name = strings.Replace(name, "--U--", "_", -1)
+
+	return name
+}
+
+func getServiceNameEx(config *model.LBConfig) (serviceName, envUuid, suffix string, err error) {
+	// format: <service_name>_<environment_uuid>_rancher.internal
+	parts := strings.Split(config.LBTargetPoolName, "_")
+
+	if len(parts) < 3 {
+		err = fmt.Errorf("Failed to split service name '%v': %v", config.LBTargetPoolName, err)
+		return
+	}
+
+	// done
+	serviceName = encodeServiceName(parts[0])
+	envUuid = encodeServiceName(parts[1])
+	suffix = encodeServiceName(parts[2])
 	return
 }
 
-func getPoolName(service *zlb.ServiceDetails) (pn string) {
-	pn = service.ServiceName
+func getServiceName(config *model.LBConfig) string {
+	// format: <service_name>_<environment_uuid>_rancher.internal
+	pn := config.LBTargetPoolName
 
-	// replace invalid chars
-	pn = strings.Replace(pn, "--D--", ".", -1)
-	pn = strings.Replace(pn, "--U--", "_", -1)
+	return encodeServiceName(pn)
+}
 
-	return
+func getPoolName(service *zlb.ServiceDetails) string {
+	pn := service.ServiceName
+
+	return decodeServiceName(pn)
 }
 
 func (p *ZevenetProvider) Init() (err error) {
@@ -129,17 +153,30 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 	}
 
 	// delete the service
-	serviceName := getServiceName(&config)
+	// (the environment id can change, so ignore it)
+	if true {
+		sn, _, suffix, err := getServiceNameEx(&config)
 
-	log.Debugf("Deleting service on farm %v: %v", farm.FarmName, serviceName)
+		if err != nil {
+			return "", fmt.Errorf("Failed to get service name: %v", err)
+		}
 
-	_, err = p.client.DeleteService(farm.FarmName, serviceName)
+		for _, srv := range farm.Services {
+			if strings.HasPrefix(srv.ServiceName, sn+"_") && strings.HasSuffix(srv.ServiceName, "_"+suffix) {
+				log.Debugf("Deleting service on farm %v: %v", farm.FarmName, srv.ServiceName)
 
-	if err != nil {
-		return "", fmt.Errorf("Failed to delete service on Zevenet loadbalancer: %v", err)
+				_, err := p.client.DeleteService(srv.FarmName, srv.ServiceName)
+
+				if err != nil {
+					return "", fmt.Errorf("Failed to delete service on Zevenet loadbalancer: %v", err)
+				}
+			}
+		}
 	}
 
 	// check if http redirection applies
+	serviceName := getServiceName(&config)
+
 	log.Debugf("Adding service on farm %v: %v", farm.FarmName, serviceName)
 	log.Debugf("Service labels: %v", config.LBLabels)
 
