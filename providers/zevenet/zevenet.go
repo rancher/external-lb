@@ -51,9 +51,9 @@ func getServiceNameEx(config *model.LBConfig) (serviceName, envUuid, suffix stri
 	}
 
 	// done
-	serviceName = encodeServiceName(parts[0])
-	envUuid = encodeServiceName(parts[1])
-	suffix = encodeServiceName(parts[2])
+	serviceName = encodeServiceName(strings.Join(parts[:len(parts)-2], "_"))
+	envUuid = encodeServiceName(parts[len(parts)-2])
+	suffix = encodeServiceName(parts[len(parts)-1])
 	return
 }
 
