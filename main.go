@@ -20,7 +20,8 @@ import (
 const (
 	pollInterval = 1000
 	// if metadata wasn't updated in 1 min, force update would be executed
-	forceUpdateInterval = 1
+	//forceUpdateInterval = 1
+	EnvVarForceUpdateInterval = "FORCE_UPDATE_INTERVAL"
 )
 
 var (
@@ -41,6 +42,11 @@ func setEnv() {
 	flag.Parse()
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	forceUpdateInterval := os.Getenv(EnvVarForceUpdateInterval)
+	if forceUpdateInterval == "" {
+		forceUpdateInterval = 1
 	}
 
 	if *logFile != "" {
