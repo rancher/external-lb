@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/metadata"
@@ -36,6 +37,9 @@ var (
 
 	targetPoolSuffix        string
 	metadataLBConfigsCached = make(map[string]model.LBConfig)
+
+	forceUpdateInterval float64
+	i string
 )
 
 func setEnv() {
@@ -44,9 +48,15 @@ func setEnv() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	forceUpdateInterval := os.Getenv(EnvVarForceUpdateInterval)
-	if forceUpdateInterval == "" {
-		forceUpdateInterval = 1
+	i = os.Getenv(EnvVarForceUpdateInterval)
+	if i == "" {
+		i = "1"
+	}
+
+	var err error
+	forceUpdateInterval, err = strconv.ParseFloat(i, 64)
+	if err != nil {
+		logrus.Fatalf("Failed to initialize forceUpateInterval: %v", err)
 	}
 
 	if *logFile != "" {
@@ -62,7 +72,6 @@ func setEnv() {
 	}
 
 	// initialize metadata client
-	var err error
 	m, err = metadata.NewMetadataClient(*metadataAddress)
 	if err != nil {
 		logrus.Fatalf("Failed to initialize Rancher metadata client: %v", err)
