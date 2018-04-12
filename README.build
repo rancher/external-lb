@@ -1,0 +1,5 @@
+NOTE: make package target not working for me for some reason..
+manual workaround:
+make build
+cd package && cp ../bin/external-lb .
+docker build -t chessracer/external-lb .

@@ -13,6 +13,16 @@ Design
 
 * The external-lb service will fetch info from rancher-metadata server at a periodic interval, then compare it with the data returned by the LB provider, and propagate the changes to the LB provider.
 
+Environment Variables
+==========
+
+The following environment variables are used to configure global options.
+
+| Variable | Description | Default value |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| POLL_INTERVAL | Value in milliseconds to check for rancher metadata updates | `1000` |
+| FORCE_UPDATE_INTERVAL | Value in minutes to force a resource poll. Increasing this value may be required if you run into api limits enforced by your cloud providor | `1` |
+
 Contact
 ========
 For bugs, questions, comments, corrections, suggestions, etc., open an issue in
