@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/metadata"
@@ -18,9 +19,7 @@ import (
 )
 
 const (
-	pollInterval = 1000
-	// if metadata wasn't updated in 1 min, force update would be executed
-	//forceUpdateInterval = 1
+	EnvVarPollInterval = "POLL_INTERVAL"
 	EnvVarForceUpdateInterval = "FORCE_UPDATE_INTERVAL"
 )
 
@@ -36,6 +35,11 @@ var (
 
 	targetPoolSuffix        string
 	metadataLBConfigsCached = make(map[string]model.LBConfig)
+
+	forceUpdateInterval float64
+	pollInterval float64
+	p string
+	i string
 )
 
 func setEnv() {
@@ -44,10 +48,32 @@ func setEnv() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	forceUpdateInterval := os.Getenv(EnvVarForceUpdateInterval)
-	if forceUpdateInterval == "" {
-		forceUpdateInterval = 1
+	var err error
+
+	// initialize polling and forceUpdate intervals
+	i = os.Getenv(EnvVarForceUpdateInterval)
+	if i == "" {
+		logrus.Info(EnvVarForceUpdateInterval + " is not set, using default value '1'")
+		i = "1"
 	}
+
+	// if metadata wasn't updated in 1 min, force update would be executed
+	forceUpdateInterval, err = strconv.ParseFloat(i, 64)
+	if err != nil {
+		logrus.Fatalf("Failed to initialize forceUpdateInterval: %v", err)
+	}
+
+	p = os.Getenv(EnvVarPollInterval)
+	if p == "" {
+		logrus.Info(EnvVarPollInterval + " is not set, using default value '1000'")
+		p = "1000"
+	}
+
+	pollInterval, err = strconv.ParseFloat(i, 64)
+	if err != nil {
+		logrus.Fatalf("Failed to initialize pollInterval: %v", err)
+	}
+
 
 	if *logFile != "" {
 		if output, err := os.OpenFile(*logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
@@ -62,7 +88,6 @@ func setEnv() {
 	}
 
 	// initialize metadata client
-	var err error
 	m, err = metadata.NewMetadataClient(*metadataAddress)
 	if err != nil {
 		logrus.Fatalf("Failed to initialize Rancher metadata client: %v", err)
