@@ -4,9 +4,9 @@ import (
 	"flag"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/rancher/external-lb/metadata"
@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	EnvVarPollInterval = "POLL_INTERVAL"
+	EnvVarPollInterval        = "POLL_INTERVAL"
 	EnvVarForceUpdateInterval = "FORCE_UPDATE_INTERVAL"
 )
 
@@ -37,9 +37,9 @@ var (
 	metadataLBConfigsCached = make(map[string]model.LBConfig)
 
 	forceUpdateInterval float64
-	pollInterval float64
-	p string
-	i string
+	pollInterval        float64
+	p                   string
+	i                   string
 )
 
 func setEnv() {
@@ -73,7 +73,6 @@ func setEnv() {
 	if err != nil {
 		logrus.Fatalf("Failed to initialize pollInterval: %v", err)
 	}
-
 
 	if *logFile != "" {
 		if output, err := os.OpenFile(*logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
