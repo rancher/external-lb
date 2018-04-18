@@ -120,6 +120,19 @@ func main() {
 				continue
 			}
 
+			// filter regarding provider
+			if true {
+				metadataLBConfigsFiltered := make(map[string]model.LBConfig)
+
+				for k, v := range metadataLBConfigs {
+					if pn, ok := v.LBLabels["provider"]; !ok || strings.EqualFold(pn, *providerName) {
+						metadataLBConfigsFiltered[k] = v
+					}
+				}
+
+				metadataLBConfigs = metadataLBConfigsFiltered
+			}
+
 			logrus.Debugf("LB configs from metadata: %v", metadataLBConfigs)
 
 			// A flapping service might cause the metadata version to change
