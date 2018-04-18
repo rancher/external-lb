@@ -15,6 +15,7 @@ import (
 	_ "github.com/rancher/external-lb/providers/avi"
 	_ "github.com/rancher/external-lb/providers/elbv1"
 	_ "github.com/rancher/external-lb/providers/f5"
+	_ "github.com/rancher/external-lb/providers/gravitee"
 	_ "github.com/rancher/external-lb/providers/zevenet"
 )
 
