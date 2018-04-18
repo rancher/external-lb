@@ -1,7 +1,9 @@
 package zevenet
 
 import (
+	"crypto/sha1"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -18,7 +20,8 @@ const (
 )
 
 type ZevenetProvider struct {
-	client *zlb.ZapiSession
+	client      *zlb.ZapiSession
+	configCache map[string]string
 }
 
 func init() {
@@ -62,6 +65,33 @@ func getServiceName(config *model.LBConfig) string {
 	pn := config.LBTargetPoolName
 
 	return encodeServiceName(pn)
+}
+
+func getConfigHash(config *model.LBConfig) string {
+	h := sha1.New()
+	io.WriteString(h, config.LBEndpoint)
+	io.WriteString(h, "###")
+
+	for k, v := range config.LBLabels {
+		io.WriteString(h, k)
+		io.WriteString(h, ":::")
+		io.WriteString(h, v)
+		io.WriteString(h, ";;;")
+	}
+
+	io.WriteString(h, "###")
+	io.WriteString(h, config.LBTargetPoolName)
+	io.WriteString(h, "###")
+	io.WriteString(h, config.LBTargetPort)
+	io.WriteString(h, "###")
+
+	for _, v := range config.LBTargets {
+		io.WriteString(h, v.HostIP)
+		io.WriteString(h, ":")
+		io.WriteString(h, v.Port)
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func getPoolName(service *zlb.ServiceDetails) string {
@@ -141,6 +171,16 @@ func (p *ZevenetProvider) AddLBConfig(config model.LBConfig) (string, error) {
 }
 
 func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LBConfig) (string, error) {
+	// check if the config did change
+	serviceName := getServiceName(&config)
+	configHash := getConfigHash(&config)
+	cacheEntryName := fmt.Sprintf("%v#%v", farmName, serviceName)
+
+	if hash, ok := p.configCache[cacheEntryName]; ok && hash == configHash {
+		log.Infof("Skipping config update of unchanged service %v on farm %v", serviceName, farmName)
+		return "", nil
+	}
+
 	// check if the farm exists
 	farm, err := p.client.GetFarm(farmName)
 
@@ -175,8 +215,6 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 	}
 
 	// check if http redirection applies
-	serviceName := getServiceName(&config)
-
 	log.Debugf("Adding service on farm %v: %v", farm.FarmName, serviceName)
 	log.Debugf("Service labels: %v", config.LBLabels)
 
@@ -283,6 +321,9 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 		return "", fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
 	}
 
+	// update cache
+	p.configCache[cacheEntryName] = configHash
+
 	return "", nil
 }
 
@@ -331,6 +372,11 @@ func (p *ZevenetProvider) RemoveLBConfig(config model.LBConfig) error {
 		if err != nil {
 			return fmt.Errorf("Failed to restart farm on Zevenet loadbalancer: %v", err)
 		}
+
+		// remove from cache
+		cacheEntryName := fmt.Sprintf("%v#%v", farmName, serviceName)
+
+		delete(p.configCache, cacheEntryName)
 	}
 
 	return nil
