@@ -73,7 +73,7 @@ func getConfigHash(config *model.LBConfig) string {
 	io.WriteString(h, config.LBEndpoint)
 	io.WriteString(h, "###")
 
-	var labels []string
+	labels := make([]string, 0)
 
 	for k, _ := range config.LBLabels {
 		labels = append(labels, k)
