@@ -227,8 +227,17 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 			return nil, fmt.Errorf("Failed to get API metadata for %v from Gravitee loadbalancer: %v", apiInfo, err)
 		}
 
-		for _, m := range metaRaw {
-			if !strings.HasPrefix(m.Key, "rancher-lb-") {
+		if true {
+			found := false
+
+			for _, m := range metaRaw {
+				if strings.HasPrefix(m.Key, "rancher-lb-") {
+					found = true
+					break
+				}
+			}
+
+			if !found {
 				// ignore this api
 				continue
 			}
