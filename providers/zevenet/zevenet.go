@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -72,7 +73,17 @@ func getConfigHash(config *model.LBConfig) string {
 	io.WriteString(h, config.LBEndpoint)
 	io.WriteString(h, "###")
 
-	for k, v := range config.LBLabels {
+	var labels []string
+
+	for k, _ := range config.LBLabels {
+		labels = append(labels, k)
+	}
+
+	sort.Strings(labels)
+
+	for _, k := range labels {
+		v := config.LBLabels[k]
+
 		io.WriteString(h, k)
 		io.WriteString(h, ":::")
 		io.WriteString(h, v)
