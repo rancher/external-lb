@@ -119,6 +119,8 @@ func (p *ZevenetProvider) Init() (err error) {
 		return
 	}
 
+	p.configCache = make(map[string]string)
+
 	log.Infof("Configured %s provider using %s", p.GetName(), host)
 	return
 }
