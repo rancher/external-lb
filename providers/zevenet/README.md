@@ -7,6 +7,7 @@ The following labels are supported on backend container, which host the services
 | Label Name | Description | Example | Optional | Farm-specific |
 |-----------|------|-------|-------|---|
 | io.rancher.service.external_lb.endpoint | Hostname pattern to use for the service. | blog(\\.example\\.com)? | No | Yes
+| io.rancher.service.external_lb.provider | Has to be set to 'zevenet' to be handled by LB provider. Ignored if not set. | zevenet | Yes | No
 | io.rancher.service.external_lb.farms | List of farms to add the service to. Separated by comma. | MainHTTP,MainHTTPS | No | No
 | io.rancher.service.external_lb.http_redirect_url | Redirect URL to use for HTTP requests (without HTTPS). | https://blog.example.com | Yes | Yes
 | io.rancher.service.external_lb.url_pattern | The URL pattern to use for limiting handled requests. | ^public/ | Yes | Yes
