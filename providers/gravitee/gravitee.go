@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/konsorten/go-gravitee"
@@ -15,9 +16,8 @@ import (
 )
 
 const (
-	providerName           = "Gravitee"
-	providerSlug           = "gravitee"
-	graviteeGlobalApiLabel = "rancher-lb"
+	providerName = "Gravitee"
+	providerSlug = "gravitee"
 )
 
 type GraviteeProvider struct {
@@ -129,6 +129,11 @@ func (p *GraviteeProvider) AddLBConfig(config model.LBConfig) (string, error) {
 	apis, err := p.client.GetAPIsByLabel(config.LBEndpoint)
 	if err != nil {
 		log.Errorf("Failed to retrieve APIs with label %v: %v", config.LBEndpoint, err)
+		return "", nil
+	}
+	if apis == nil || len(apis) <= 0 {
+		log.Warnf("No APIs found with with label %v", config.LBEndpoint)
+		return "", nil
 	}
 
 	// add configurations
@@ -166,6 +171,12 @@ func (p *GraviteeProvider) addLBConfigSingle(api gravitee.ApiInfo, config model.
 		return "", fmt.Errorf("Failed to update endpoints for API %v on Gravitee loadbalancer: %v", api, err)
 	}
 
+	// add meta-data
+	p.client.SetLocalAPIMetadata(api.ID, "rancher-lb-pool-name", config.LBTargetPoolName, gravitee.ApiMetadataFormat_String)
+	p.client.SetLocalAPIMetadata(api.ID, "rancher-lb-port", config.LBTargetPort, gravitee.ApiMetadataFormat_String)
+	p.client.SetLocalAPIMetadata(api.ID, "rancher-lb-endpoint", config.LBEndpoint, gravitee.ApiMetadataFormat_String)
+	p.client.SetLocalAPIMetadata(api.ID, "rancher-lb-hash", configHash, gravitee.ApiMetadataFormat_String)
+
 	// deploy new api config
 	log.Debugf("Deploying API: %v", api)
 
@@ -199,8 +210,7 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 	}
 
 	// get all APIs
-	apis, err := p.client.GetAPIsByLabel(graviteeGlobalApiLabel)
-
+	apis, err := p.client.GetAllAPIs()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get APIs from Gravitee loadbalancer: %v", err)
 	}
@@ -211,6 +221,22 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		// check if the farm exists
 		log.Debugf("Gathering existing API: %v", apiInfo.Name)
 
+		// get metadata (and check if this is a rancher API)
+		metaRaw, err := p.client.GetAPIMetadata(apiInfo.ID)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get API metadata for %v from Gravitee loadbalancer: %v", apiInfo, err)
+		}
+
+		for _, m := range metaRaw {
+			if !strings.HasPrefix(m.Key, "rancher-lb-") {
+				// ignore this api
+				continue
+			}
+		}
+
+		meta := getApiMetadataMap(metaRaw)
+
+		// retrieve details
 		api, err := p.client.GetAPI(apiInfo.ID)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get API %v from Gravitee loadbalancer: %v", apiInfo, err)
@@ -219,14 +245,7 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 			return nil, fmt.Errorf("API not found on Gravitee loadbalancer: %v", apiInfo)
 		}
 
-		// get metadata
-		metaRaw, err := p.client.GetAPIMetadata(apiInfo.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get API metadata for %v from Gravitee loadbalancer: %v", apiInfo, err)
-		}
-
-		meta := getApiMetadataMap(metaRaw)
-
+		// build config
 		cfg := model.LBConfig{}
 		ok := false
 
@@ -244,6 +263,13 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 		if cfg.LBEndpoint, ok = meta["rancher-lb-endpoint"]; !ok {
 			log.Errorf("Failed to retrieve target endpoint from 'rancher-lb-endpoint' API metadata for %v from Gravitee loadbalancer", apiInfo)
 			continue
+		}
+
+		if configHash, ok := meta["rancher-lb-hash"]; ok {
+			// add to cache, if new
+			if _, kk := p.configCache[api.ID]; !kk {
+				p.configCache[api.ID] = configHash
+			}
 		}
 
 		// get endpoints
