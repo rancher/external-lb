@@ -196,11 +196,70 @@ func (p *GraviteeProvider) UpdateLBConfig(config model.LBConfig) (string, error)
 	return p.AddLBConfig(config)
 }
 
-func (p *GraviteeProvider) RemoveLBConfig(config model.LBConfig) (err error) {
-	config.LBTargets = make([]model.LBTarget, 0)
+func (p *GraviteeProvider) RemoveLBConfig(config model.LBConfig) error {
+	// first check if changes can be made
+	if available, msg := p.client.Ping(); !available {
+		return fmt.Errorf("Failed to ping Gravitee loadbalancer: %v", msg)
+	}
 
-	_, err = p.AddLBConfig(config)
-	return
+	apis, err := p.client.GetAPIsByLabel(config.LBEndpoint)
+	if err != nil {
+		log.Errorf("Failed to retrieve APIs with label %v: %v", config.LBEndpoint, err)
+		return nil
+	}
+	if apis == nil || len(apis) <= 0 {
+		log.Warnf("No APIs found with with label %v", config.LBEndpoint)
+		return nil
+	}
+
+	// add configurations
+	for _, api := range apis {
+		// configure
+		err := p.removeLBConfigSingle(api, config)
+		if err != nil {
+			log.Errorf("Failed to update API %v: %v", api, err)
+		}
+	}
+
+	return nil
+}
+
+func (p *GraviteeProvider) removeLBConfigSingle(api gravitee.ApiInfo, config model.LBConfig) error {
+	// remove from cache
+	delete(p.configCache, api.ID)
+
+	// clear all endpoints
+	endpoints := make([]gravitee.ApiDetailsEndpoint, 0)
+
+	err := p.client.AddOrUpdateEndpoints(api.ID, endpoints, true)
+	if err != nil {
+		return fmt.Errorf("Failed to update endpoints for API %v on Gravitee loadbalancer: %v", api, err)
+	}
+
+	// remove meta-data
+	meta, err := p.client.GetAPIMetadata(api.ID)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve metadata for API %v on Gravitee loadbalancer: %v", api, err)
+	}
+
+	for _, m := range meta {
+		if m.IsLocal() && strings.HasPrefix(m.Key, "rancher-lb-") {
+			err := p.client.UnsetLocalAPIMetadata(api.ID, m.Key)
+			if err != nil {
+				log.Warnf("Failed to delete local metadata '%v' from API %v on Gravitee loadbalancer: %v", m.Key, api, err)
+			}
+		}
+	}
+
+	// deploy new api config
+	log.Debugf("Deploying API: %v", api)
+
+	err = p.client.DeployAPI(api.ID)
+	if err != nil {
+		return fmt.Errorf("Failed to deploy API %v on Gravitee loadbalancer: %v", api, err)
+	}
+
+	return nil
 }
 
 func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
@@ -231,7 +290,7 @@ func (p *GraviteeProvider) GetLBConfigs() ([]model.LBConfig, error) {
 			found := false
 
 			for _, m := range metaRaw {
-				if strings.HasPrefix(m.Key, "rancher-lb-") {
+				if m.IsLocal() && strings.HasPrefix(m.Key, "rancher-lb-") {
 					found = true
 					break
 				}
