@@ -266,7 +266,7 @@ func (p *ZevenetProvider) addLBConfigSingleFarm(farmName string, config model.LB
 	}
 
 	// update values
-	service.HostPattern = "^" + hostPattern + "$"
+	service.HostPattern = hostPattern + "$"
 	service.URLPattern = urlPattern
 
 	if httpRedirectURL != "" {
