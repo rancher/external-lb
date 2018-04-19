@@ -12,7 +12,7 @@ The following labels are supported on backend container, which host the services
 | io.rancher.service.external_lb.http_redirect_url | Redirect URL to use for HTTP requests (without HTTPS). | https://blog.example.com | Yes | Yes
 | io.rancher.service.external_lb.url_pattern | The URL pattern to use for limiting handled requests. | ^public/ | Yes | Yes
 | io.rancher.service.external_lb.check | The Farm Guarian check command used to monitor the backend service.<br>If set to "true" the default "check_http [-S] -H HOST -p PORT" will be used. [1] | check_http -H HOST -p PORT | Yes | No
-| io.rancher.service.external_lb.encrypt | The backend service port is an HTTPS endpoint and re-encryption is required. | true | No | No
+| io.rancher.service.external_lb.encrypt | The backend service port is an HTTPS endpoint and re-encryption is required. Default is false. | true | Yes | No
 
 Some labels are farm-specific and are support both as `io.rancher.service.external_lb.setting` and `io.rancher.service.external_lb.farm.setting`. The name of the farm must be lowercase.
 
