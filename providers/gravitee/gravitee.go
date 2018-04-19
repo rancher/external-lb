@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -157,11 +158,54 @@ func (p *GraviteeProvider) addLBConfigSingle(api gravitee.ApiInfo, config model.
 		return "", nil
 	}
 
+	log.Debugf("Adding endpoints on API: %v", api)
+	log.Debugf("Service labels: %v", config.LBLabels)
+
+	// parse labels
+	encryptedBackendsStr, _ := config.LBLabels["encrypt"]
+	encryptedBackends := encryptedBackendsStr == "true"
+
+	keepAliveStr, _ := config.LBLabels["keep_alive"]
+	keepAlive := keepAliveStr == "true" || keepAliveStr == ""
+
+	pipeliningStr, _ := config.LBLabels["pipelining"]
+	pipelining := pipeliningStr == "true"
+
+	compressStr, _ := config.LBLabels["compress"]
+	compress := compressStr == "true" || compressStr == ""
+
+	followRedirectsStr, _ := config.LBLabels["follow_redirects"]
+	followRedirects := followRedirectsStr == "true"
+
+	connectTimeoutStr, _ := config.LBLabels["conn_timeout"]
+	readTimeoutStr, _ := config.LBLabels["read_timeout"]
+	idleTimeoutStr, _ := config.LBLabels["idle_timeout"]
+	maxConnectionsStr, _ := config.LBLabels["max_conn"]
+
 	// update endpoints
 	endpoints := make([]gravitee.ApiDetailsEndpoint, 0)
 
 	for _, ep := range config.LBTargets {
 		e := gravitee.MakeApiDetailsEndpoint(ep.HostIP, fmt.Sprintf("http://%v:%v", ep.HostIP, ep.Port))
+
+		e.Http.KeepAlive = keepAlive
+		e.Http.Pipelining = pipelining
+		e.Http.UseCompression = compress
+		e.Http.FollowRedirects = followRedirects
+		e.SSL.IsEnabled = encryptedBackends
+
+		if connectTimeoutStr != "" {
+			e.Http.ConnectTimeoutMS, _ = strconv.Atoi(connectTimeoutStr)
+		}
+		if readTimeoutStr != "" {
+			e.Http.ReadTimeoutMS, _ = strconv.Atoi(readTimeoutStr)
+		}
+		if idleTimeoutStr != "" {
+			e.Http.IdleTimeoutMS, _ = strconv.Atoi(idleTimeoutStr)
+		}
+		if maxConnectionsStr != "" {
+			e.Http.MaxConcurrentConnections, _ = strconv.Atoi(maxConnectionsStr)
+		}
 
 		endpoints = append(endpoints, e)
 	}
