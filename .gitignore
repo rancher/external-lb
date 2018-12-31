@@ -5,3 +5,4 @@ external-lb
 /dist
 *.swp
 /.trash-cache
+trash.lock
