@@ -164,7 +164,7 @@ func (b *BigIP) APICall(options *APIRequest) ([]byte, error) {
 		req.SetBasicAuth(b.User, b.Password)
 	}
 
-	//fmt.Println("REQ -- ", options.Method, " ", url," -- ",options.Body)
+	// fmt.Println("REQ -- ", options.Method, " ", url, " -- ", options.Body)
 
 	if len(options.ContentType) > 0 {
 		req.Header.Set("Content-Type", options.ContentType)
@@ -180,21 +180,28 @@ func (b *BigIP) APICall(options *APIRequest) ([]byte, error) {
 	data, _ := ioutil.ReadAll(res.Body)
 
 	if res.StatusCode >= 400 {
-		if res.Header["Content-Type"][0] == "application/json" {
+		if res.Header.Get("Content-Type") == "application/json" {
 			return data, b.checkError(data)
 		}
 
 		return data, errors.New(fmt.Sprintf("HTTP %d :: %s", res.StatusCode, string(data[:])))
 	}
 
+	// fmt.Println("Resp --", res.StatusCode, " -- ", string(data))
 	return data, nil
 }
 
 func (b *BigIP) iControlPath(parts []string) string {
 	var buffer bytes.Buffer
+	var lastPath int
+	if strings.HasPrefix(parts[len(parts)-1], "?") {
+		lastPath = len(parts) - 2
+	} else {
+		lastPath = len(parts) - 1
+	}
 	for i, p := range parts {
 		buffer.WriteString(strings.Replace(p, "/", "~", -1))
-		if i < len(parts)-1 {
+		if i < lastPath {
 			buffer.WriteString("/")
 		}
 	}
@@ -213,30 +220,25 @@ func (b *BigIP) delete(path ...string) error {
 }
 
 func (b *BigIP) post(body interface{}, path ...string) error {
-	marshalJSON, err := jsonMarshal(body)
-	if err != nil {
-		return err
-	}
-
-	req := &APIRequest{
-		Method:      "post",
-		URL:         b.iControlPath(path),
-		Body:        strings.TrimRight(string(marshalJSON), "\n"),
-		ContentType: "application/json",
-	}
-
-	_, callErr := b.APICall(req)
-	return callErr
+	return b.reqWithBody("post", body, path...)
 }
 
 func (b *BigIP) put(body interface{}, path ...string) error {
+	return b.reqWithBody("put", body, path...)
+}
+
+func (b *BigIP) patch(body interface{}, path ...string) error {
+	return b.reqWithBody("patch", body, path...)
+}
+
+func (b *BigIP) reqWithBody(method string, body interface{}, path ...string) error {
 	marshalJSON, err := jsonMarshal(body)
 	if err != nil {
 		return err
 	}
 
 	req := &APIRequest{
-		Method:      "put",
+		Method:      method,
 		URL:         b.iControlPath(path),
 		Body:        strings.TrimRight(string(marshalJSON), "\n"),
 		ContentType: "application/json",
@@ -306,6 +308,11 @@ func jsonMarshal(t interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
+// Helper function to return a boolean pointer.
+func Bool(b bool) *bool {
+	return &b
+}
+
 // Helper to copy between transfer objects and model objects to hide the myriad of boolean representations
 // in the iControlREST api. DTO fields can be tagged with bool:"yes|enabled|true" to set what true and false
 // marshal to.
@@ -330,6 +337,17 @@ func marshal(to, from interface{}) error {
 			default:
 				return fmt.Errorf("Unknown boolean conversion for %s: %s", toFieldType.Name, fromField.Interface())
 			}
+		} else if _, ok := toField.Interface().(*bool); ok && fromField.Kind() == reflect.String {
+			switch fromField.Interface() {
+			case "yes", "enabled", "true":
+				toField.Set(reflect.ValueOf(Bool(true)))
+				break
+			case "no", "disabled", "false":
+				toField.Set(reflect.ValueOf(Bool(false)))
+				break
+			default:
+				return fmt.Errorf("Unknown boolean conversion for %s: %s", toFieldType.Name, fromField.Interface())
+			}
 		} else if fromField.Kind() == reflect.Bool && toField.Kind() == reflect.String {
 			tag := toFieldType.Tag.Get("bool")
 			switch tag {
@@ -341,6 +359,23 @@ func marshal(to, from interface{}) error {
 				break
 			case "true":
 				toField.SetString(toBoolString(fromField.Interface().(bool), "true", "false"))
+				break
+			}
+		} else if b, ok := fromField.Interface().(*bool); ok && toField.Kind() == reflect.String {
+			if b == nil {
+				continue
+			}
+
+			tag := toFieldType.Tag.Get("bool")
+			switch tag {
+			case "yes":
+				toField.SetString(toBoolString(*b, "yes", "no"))
+				break
+			case "enabled":
+				toField.SetString(toBoolString(*b, "enabled", "disabled"))
+				break
+			case "true":
+				toField.SetString(toBoolString(*b, "true", "false"))
 				break
 			}
 		} else {
