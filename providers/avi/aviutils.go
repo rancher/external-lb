@@ -123,12 +123,12 @@ func formLBConfig(vs map[string]interface{},
 		if _, ok := server["port"]; ok {
 			targetPort = strconv.FormatInt(int64(server["port"].(float64)), 10)
 		}
-		lbTargets = append(lbTargets, model.LBTarget{ipAddr, targetPort})
+		lbTargets = append(lbTargets, model.LBTarget{HostIP: ipAddr, Port: targetPort})
 	}
 
 	vsName := vs["name"].(string)
 	poolName := pool["name"].(string)
-	return model.LBConfig{vsName, poolName, defaultPort, lbTargets}
+	return model.LBConfig{LBEndpoint: vsName, LBTargetPoolName: poolName, LBTargetPort: defaultPort, LBTargets: lbTargets}
 }
 
 func GetVsFqdn(vs map[string]interface{}) (string, error) {
