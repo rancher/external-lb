@@ -132,7 +132,7 @@ func (p *F5BigIPProvider) AddLBConfig(config model.LBConfig) (string, error) {
 		updatedVs := bigip.VirtualServer{}
 		updatedVs.Pool = poolName
 
-		err = p.client.ModifyVirtualServer(config.LBEndpoint, &updatedVs)
+		err = p.client.PatchVirtualServer(config.LBEndpoint, &updatedVs)
 		if err != nil {
 			logrus.Errorf("f5 AddLBConfig: Error modifying virtual server: %v\n", err)
 			return "", err
@@ -193,7 +193,7 @@ func (p *F5BigIPProvider) RemoveLBConfig(config model.LBConfig) error {
 	updatedVs := bigip.VirtualServer{}
 	updatedVs.Pool = "None"
 
-	err = p.client.ModifyVirtualServer(config.LBEndpoint, &updatedVs)
+	err = p.client.PatchVirtualServer(config.LBEndpoint, &updatedVs)
 
 	if err != nil {
 		logrus.Errorf("f5 RemoveLBConfig: Error modifying virtual server: %v\n", err)
