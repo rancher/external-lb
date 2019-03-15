@@ -289,7 +289,7 @@ func (avi *AviSession) Delete(uri string) (interface{}, error) {
 	return avi.rest_request_interface_response("DELETE", uri, nil)
 }
 
-// get issues a GET request against the avi REST API.
+// GetCollection gets issues a GET request against the avi REST API.
 func (avi *AviSession) GetCollection(uri string) (AviCollectionResult, error) {
 	var result AviCollectionResult
 	res, rerror := avi.rest_request("GET", uri, nil)

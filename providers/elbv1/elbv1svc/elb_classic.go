@@ -17,7 +17,7 @@ const (
 	Unknown      = "Unknown"
 )
 
-// GetLoadBalancers returns the LoadBalancerDescription struct
+// GetLoadBalancerByName returns the LoadBalancerDescription struct
 // for the specified load balancer or nil if it was not found.
 func (svc *ELBClassicService) GetLoadBalancerByName(name string) (*elb.LoadBalancerDescription, error) {
 	logrus.Debugf("GetLoadBalancerByName => %s", name)
@@ -94,7 +94,7 @@ func (svc *ELBClassicService) AddLBTags(loadBalancerName string, tags map[string
 	return nil
 }
 
-// RemoveLBTags adds the specified tags to the specified load balancer.
+// RemoveLBTag adds the specified tags to the specified load balancer.
 func (svc *ELBClassicService) RemoveLBTag(loadBalancerName string, tagKey string) error {
 	logrus.Debugf("RemoveLBTag => name: %s, tagKey %s", loadBalancerName, tagKey)
 	params := &elb.RemoveTagsInput{
@@ -273,7 +273,7 @@ func (svc *ELBClassicService) RegisterInstances(loadBalancerName string, instanc
 	return nil
 }
 
-// DergisterInstances deregisters the specified EC2
+// DeregisterInstances deregisters the specified EC2
 // instances from the specified load balancer.
 func (svc *ELBClassicService) DeregisterInstances(loadBalancerName string, instanceIds []string) error {
 	logrus.Debugf("DeregisterInstances => name: %s instances: %v",

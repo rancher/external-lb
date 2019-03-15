@@ -51,7 +51,7 @@ func InitAviSession(cfg *AviConfig) (*AviSession, error) {
 	return aviSession, err
 }
 
-// checks if pool exists: returns the pool, else some error
+// CheckPoolExists checks if pool exists: returns the pool, else some error
 func (p *AviProvider) CheckPoolExists(poolName string) (bool, map[string]interface{}, error) {
 	var resp map[string]interface{}
 

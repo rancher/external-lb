@@ -112,7 +112,7 @@ func (svc *ELBClassicService) DescribeSubnets(ids []string) ([]*ec2.Subnet, erro
 	return resp.Subnets, nil
 }
 
-// AzSubnets returns a map of all availability zones in the service's
+// GetAzSubnets returns a map of all availability zones in the service's
 // VPC as keys and the ID of one active subnet in that zone as value.
 func (svc *ELBClassicService) GetAzSubnets() (map[string]string, error) {
 	params := &ec2.DescribeSubnetsInput{
